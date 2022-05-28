@@ -23,6 +23,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
         emit(state.onEditModeEvent(toEditMode: event.toEditMode)));
     on<EditBoardEvent>((event, emit) =>
         emit(state.onEditBoardEvent(editAction: event.editAction)));
+    on<SolveEvent>((event, emit) => emit(state.onSolve()));
   }
 }
 
@@ -64,4 +65,8 @@ class EditBoardEvent extends GameEvent {
   final EditAction editAction;
 
   const EditBoardEvent({required this.editAction});
+}
+
+class SolveEvent extends GameEvent {
+  const SolveEvent();
 }

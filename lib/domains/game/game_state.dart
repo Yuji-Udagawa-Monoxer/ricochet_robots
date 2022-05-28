@@ -1,11 +1,14 @@
+import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ricochet_robots/domains/board/board.dart';
 import 'package:ricochet_robots/domains/board/board_builder.dart';
 import 'package:ricochet_robots/domains/board/board_id.dart';
+import 'package:ricochet_robots/domains/board/move_history.dart';
 import 'package:ricochet_robots/domains/board/position.dart';
 import 'package:ricochet_robots/domains/board/robot.dart';
 import 'package:ricochet_robots/domains/edit/edit.dart';
 import 'package:ricochet_robots/domains/game/history.dart';
+import 'package:ricochet_robots/domains/solution/solution.dart';
 
 part 'game_state.freezed.dart';
 
@@ -21,6 +24,7 @@ class GameState with _$GameState {
     required List<History> histories,
     required Robot focusedRobot,
     required Position? selectedGridForEdit,
+    required List<MoveHistory> answerHistories,
   }) = _GameState;
 
   bool get shouldShowResult => mode == GameMode.showResult;
@@ -39,6 +43,7 @@ class GameState with _$GameState {
       histories: [],
       focusedRobot: const Robot(color: RobotColors.red),
       selectedGridForEdit: null,
+      answerHistories: [],
     );
   }
 
@@ -95,6 +100,14 @@ class GameState with _$GameState {
       board: EditFunction.update(board, editAction, selectedGridForEdit),
       selectedGridForEdit: newSelectedGridForEdit,
     );
+  }
+
+  GameState onSolve() {
+    final answerHistories = Solution(board: board).solve();
+    for (var history in answerHistories) {
+      debugPrint(history.toString());
+    }
+    return copyWith(answerHistories: answerHistories);
   }
 
   GameState get initialized => copyWith(

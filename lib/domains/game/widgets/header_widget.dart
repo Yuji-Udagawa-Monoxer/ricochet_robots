@@ -106,7 +106,15 @@ class HeaderWidget extends StatelessWidget {
           ),
           const Expanded(child: SizedBox.shrink()),
           toEditMode
-              ? const SizedBox.shrink()
+              ? IconButton(
+                  onPressed: () =>
+                      context.read<GameBloc>().add(const SolveEvent()),
+                  icon: const Icon(
+                    Icons.play_arrow,
+                    color: Colors.grey,
+                    size: _iconSize,
+                  ),
+                )
               : EditableIcon(
                   iconData: Icons.rotate_right,
                   color: Colors.grey,
