@@ -10,6 +10,12 @@ class MoveHistory {
 
   @override
   String toString() => records.map((record) => record.toString()).join(" ");
+
+  bool containsAll(MoveHistory other) {
+    // FIXME
+    return other.records.every(
+        (otherRecord) => records.any((record) => record.equal(otherRecord)));
+  }
 }
 
 class MoveRecord {
@@ -20,6 +26,9 @@ class MoveRecord {
     required this.color,
     required this.direction,
   });
+
+  bool equal(MoveRecord other) =>
+      color == other.color && direction == other.direction;
 
   @override
   String toString() {

@@ -23,7 +23,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
         emit(state.onEditModeEvent(toEditMode: event.toEditMode)));
     on<EditBoardEvent>((event, emit) =>
         emit(state.onEditBoardEvent(editAction: event.editAction)));
-    on<SolveEvent>((event, emit) => emit(state.onSolve()));
+    on<SolveEvent>((event, emit) => emit(state.onSolve(event.searchMaxCount)));
   }
 }
 
@@ -68,5 +68,7 @@ class EditBoardEvent extends GameEvent {
 }
 
 class SolveEvent extends GameEvent {
-  const SolveEvent();
+  final int searchMaxCount;
+
+  const SolveEvent({this.searchMaxCount = -1});
 }

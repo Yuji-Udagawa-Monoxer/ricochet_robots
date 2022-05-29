@@ -8,7 +8,7 @@ import 'package:ricochet_robots/domains/board/position.dart';
 import 'package:ricochet_robots/domains/board/robot.dart';
 import 'package:ricochet_robots/domains/edit/edit.dart';
 import 'package:ricochet_robots/domains/game/history.dart';
-import 'package:ricochet_robots/domains/solution/solution.dart';
+import 'package:ricochet_robots/domains/solution/solve_board.dart';
 
 part 'game_state.freezed.dart';
 
@@ -102,8 +102,9 @@ class GameState with _$GameState {
     );
   }
 
-  GameState onSolve() {
-    final answerHistories = Solution(board: board).solve();
+  GameState onSolve(int searchCountMax) {
+    final answerHistories =
+        SolveBoard(board: board, searchMaxCount: searchCountMax).answers;
     for (var history in answerHistories) {
       debugPrint(history.toString());
     }

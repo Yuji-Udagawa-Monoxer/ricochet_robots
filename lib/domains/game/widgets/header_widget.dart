@@ -107,8 +107,9 @@ class HeaderWidget extends StatelessWidget {
           const Expanded(child: SizedBox.shrink()),
           toEditMode
               ? IconButton(
-                  onPressed: () =>
-                      context.read<GameBloc>().add(const SolveEvent()),
+                  onPressed: () => context
+                      .read<GameBloc>()
+                      .add(const SolveEvent(searchMaxCount: 5)),
                   icon: const Icon(
                     Icons.play_arrow,
                     color: Colors.grey,

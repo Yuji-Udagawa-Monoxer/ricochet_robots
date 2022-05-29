@@ -94,6 +94,40 @@ class RobotPositions with _$RobotPositions {
     );
   }
 
+  static int toHash(RobotPositions positions) {
+    int hash = 0;
+    hash = (hash << 4) + positions.red.x;
+    hash = (hash << 4) + positions.red.y;
+    hash = (hash << 4) + positions.blue.x;
+    hash = (hash << 4) + positions.blue.y;
+    hash = (hash << 4) + positions.green.x;
+    hash = (hash << 4) + positions.green.y;
+    hash = (hash << 4) + positions.yellow.x;
+    hash = (hash << 4) + positions.yellow.y;
+    return hash;
+  }
+
+  static RobotPositions fromHash(int hash) {
+    return RobotPositions(
+      red: Position(
+        x: (hash >> 28) % 16,
+        y: (hash >> 24) % 16,
+      ),
+      blue: Position(
+        x: (hash >> 20) % 16,
+        y: (hash >> 16) % 16,
+      ),
+      green: Position(
+        x: (hash >> 12) % 16,
+        y: (hash >> 8) % 16,
+      ),
+      yellow: Position(
+        x: (hash >> 4) % 16,
+        y: (hash >> 0) % 16,
+      ),
+    );
+  }
+
   Robot? getRobotIfExists({required Position position}) {
     if (position == red) {
       return Robot.red;
