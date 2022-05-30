@@ -89,6 +89,39 @@ class HeaderWidget extends StatelessWidget {
     );
   }
 
+  Widget _buildSolveForm() {
+    return BlocBuilder<GameBloc, GameState>(
+      builder: (context, state) {
+        final bloc = context.read<GameBloc>();
+        return Row(
+          children: [
+            IconButton(
+              onPressed: () => bloc.add(const SolveEvent()),
+              icon: const Icon(
+                Icons.play_arrow,
+                color: Colors.grey,
+                size: _iconSize,
+              ),
+            ),
+            DropdownButton<int>(
+              value: state.searchCount,
+              onChanged: (int? value) =>
+                  bloc.add(SetSearchCountEvent(searchCount: value ?? -1)),
+              items: List.generate(16, (index) => index)
+                  .map<DropdownMenuItem<int>>((int value) {
+                return DropdownMenuItem<int>(
+                  value: value == 0 ? -1 : value,
+                  child: Text(value == 0 ? 'First' : value.toString()),
+                );
+              }).toList(),
+            ),
+            const SizedBox(width: 8.0),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final toEditMode = currentMode != GameMode.edit;
@@ -106,16 +139,7 @@ class HeaderWidget extends StatelessWidget {
           ),
           const Expanded(child: SizedBox.shrink()),
           toEditMode
-              ? IconButton(
-                  onPressed: () => context
-                      .read<GameBloc>()
-                      .add(const SolveEvent(searchMaxCount: 8)), // FIXME
-                  icon: const Icon(
-                    Icons.play_arrow,
-                    color: Colors.grey,
-                    size: _iconSize,
-                  ),
-                )
+              ? _buildSolveForm()
               : EditableIcon(
                   iconData: Icons.rotate_right,
                   color: Colors.grey,

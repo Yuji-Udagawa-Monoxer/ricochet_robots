@@ -25,6 +25,7 @@ class GameState with _$GameState {
     required Robot focusedRobot,
     required Position? selectedGridForEdit,
     required List<MoveHistory> answerHistories,
+    required int searchCount,
   }) = _GameState;
 
   bool get shouldShowResult => mode == GameMode.showResult;
@@ -44,6 +45,7 @@ class GameState with _$GameState {
       focusedRobot: const Robot(color: RobotColors.red),
       selectedGridForEdit: null,
       answerHistories: [],
+      searchCount: -1,
     );
   }
 
@@ -102,15 +104,17 @@ class GameState with _$GameState {
     );
   }
 
-  GameState onSolve(int searchFinishedCount) {
+  GameState onSolve() {
     final answerHistories =
-        SolveBoard(board: board, searchFinishedCount: searchFinishedCount)
-            .answers;
+        SolveBoard(board: board, searchFinishedCount: searchCount).answers;
     for (var history in answerHistories) {
       debugPrint(history.toString());
     }
     return copyWith(answerHistories: answerHistories);
   }
+
+  GameState onSetSearchCount(int searchCount) =>
+      copyWith(searchCount: searchCount);
 
   GameState get initialized => copyWith(
         mode: GameMode.play,

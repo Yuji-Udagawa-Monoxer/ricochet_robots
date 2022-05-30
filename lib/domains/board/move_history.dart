@@ -9,7 +9,10 @@ class MoveHistory {
   });
 
   @override
-  String toString() => records.map((record) => record.toString()).join(" ");
+  String toString() => [
+        records.length.toString(),
+        ...records.map((record) => record.toString())
+      ].join(" ");
 
   bool containsAll(MoveHistory other) {
     return other.records.every(
