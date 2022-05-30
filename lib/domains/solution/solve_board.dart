@@ -86,6 +86,12 @@ class SolveBoard {
   void _init() {
     _robotPositions.set(board.robotPositions);
     final startRobotPositionsHash = _robotPositions.toHash();
+
+    _makeMovedNext(startRobotPositionsHash);
+
+    _makeShortestGoalMemo();
+
+    _robotPositions.set(board.robotPositions);
     _stateMemo[startRobotPositionsHash] = StateMemo(
       robotPositionsHash: startRobotPositionsHash,
       moveCount: 0,
@@ -93,10 +99,6 @@ class SolveBoard {
       lastMove: null,
     );
     queueList[0].addLast(startRobotPositionsHash);
-
-    _makeMovedNext(startRobotPositionsHash);
-
-    _makeShortestGoalMemo();
   }
 
   void _makeMovedNext(int originalHash) {
@@ -133,7 +135,80 @@ class SolveBoard {
   }
 
   void _makeShortestGoalMemo() {
-    // FIXME
+    final Queue<Position> queue = Queue();
+    final goalColor = board.goal.color ?? RobotColors.red;
+    for (var x = 0; x < 16; ++x) {
+      for (var y = 0; y < 16; ++y) {
+        final position = Position(x: x, y: y);
+        if (board.isGoal(position, Robot(color: goalColor))) {
+          _shortestGoalMemo[x][y].shortestCount = 0;
+          queue.add(position);
+        }
+      }
+    }
+    while (queue.isNotEmpty) {
+      final firstPosition = queue.removeFirst();
+      final memo = _shortestGoalMemo[firstPosition.x][firstPosition.y];
+
+      _robotPositions.setOneColor(goalColor, firstPosition);
+
+      for (final direction in Directions.values) {
+        var x = firstPosition.x;
+        var y = firstPosition.y;
+        while (board.grids.grids[y][x].canMove(direction)) {
+          switch (direction) {
+            case Directions.up:
+              --y;
+              break;
+            case Directions.right:
+              ++x;
+              break;
+            case Directions.down:
+              ++y;
+              break;
+            case Directions.left:
+              --x;
+              break;
+          }
+
+          final shortestCount = _shortestGoalMemo[x][y].shortestCount;
+          if (shortestCount > memo.shortestCount + 1) {
+            _shortestGoalMemo[x][y].shortestCount = memo.shortestCount + 1;
+            _shortestGoalMemo[x][y].needRobot.clear();
+            queue.add(Position(x: x, y: y));
+          }
+          if (shortestCount >= memo.shortestCount + 1) {
+            // FIXME
+          }
+        }
+      }
+    }
+  }
+
+  int _findShortestCount() {
+    int _count(RobotColors color) {
+      final position = _robotPositions.positions[color.index];
+      final memo = _shortestGoalMemo[position.x][position.y];
+      var alreadyWall = memo.needRobot.isEmpty;
+      for (final need in memo.needRobot) {
+        if (_robotPositions.positions.contains(need)) {
+          alreadyWall = true;
+          break;
+        }
+      }
+      return memo.shortestCount - 1 + (alreadyWall ? 0 : 1);
+    }
+
+    final goalColor = board.goal.color;
+    int minCount = 1 << 30;
+    if (goalColor == null) {
+      for (final color in RobotColors.values) {
+        minCount = min(minCount, _count(color));
+      }
+    } else {
+      minCount = _count(goalColor);
+    }
+    return minCount;
   }
 
   void _solve() {
@@ -194,11 +269,11 @@ class SolveBoard {
         }
 
         // add nextSearch
-        final nextKeys = nextMoveCount;
-        if (nextKeys > queueList.length) {
+        final estimatedShortestMoveCount = nextMoveCount + _findShortestCount();
+        if (estimatedShortestMoveCount > queueList.length) {
           continue;
         }
-        queueList[nextKeys].addLast(nextHash);
+        queueList[estimatedShortestMoveCount].addLast(nextHash);
         ++searchStateNum;
       }
     }

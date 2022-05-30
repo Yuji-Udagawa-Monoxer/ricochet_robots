@@ -12,7 +12,6 @@ class MoveHistory {
   String toString() => records.map((record) => record.toString()).join(" ");
 
   bool containsAll(MoveHistory other) {
-    // FIXME
     return other.records.every(
         (otherRecord) => records.any((record) => record.equal(otherRecord)));
   }

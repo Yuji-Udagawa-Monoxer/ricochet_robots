@@ -25,11 +25,24 @@ class RobotPositionsMutable {
     positions[RobotColors.yellow.index] = yellow;
   }
 
+  @override
+  String toString() => positions.map((e) => e.toString()).join(" ");
+
   void set(RobotPositions robotPositionsImmutable) {
     positions[RobotColors.red.index] = robotPositionsImmutable.red;
     positions[RobotColors.blue.index] = robotPositionsImmutable.blue;
     positions[RobotColors.green.index] = robotPositionsImmutable.green;
     positions[RobotColors.yellow.index] = robotPositionsImmutable.yellow;
+  }
+
+  void setOneColor(RobotColors robotColor, Position position) {
+    for (final color in RobotColors.values) {
+      if (color == robotColor) {
+        positions[color.index] = position;
+      } else {
+        positions[color.index] = const Position(x: 16, y: 16);
+      }
+    }
   }
 
   void move({
