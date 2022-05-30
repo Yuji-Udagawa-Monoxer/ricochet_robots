@@ -26,7 +26,7 @@ class StateMemo {
 class ShortestGoalMemo {
   final Position current;
   int shortestCount = 1 << 30;
-  final List<Position> needRobot = []; // or, empty => not need
+  final Set<Position> needRobot = HashSet(); // or, empty => not need
 
   ShortestGoalMemo({
     required this.current,
@@ -153,62 +153,30 @@ class SolveBoard {
       _robotPositions.setOneColor(goalColor, firstPosition);
 
       for (final direction in Directions.values) {
-        var x = firstPosition.x;
-        var y = firstPosition.y;
-        while (board.grids.grids[y][x].canMove(direction)) {
-          switch (direction) {
-            case Directions.up:
-              --y;
-              break;
-            case Directions.right:
-              ++x;
-              break;
-            case Directions.down:
-              ++y;
-              break;
-            case Directions.left:
-              --x;
-              break;
+        var current = firstPosition;
+        final reverseDirection = Directions.values[(direction.index + 2) % 4];
+        final Position? need = board
+                .grids.grids[firstPosition.y][firstPosition.x]
+                .canMove(reverseDirection)
+            ? current.next(reverseDirection)
+            : null;
+        while (board.grids.grids[current.y][current.x].canMove(direction)) {
+          current = current.next(direction);
+          final nextMemo = _shortestGoalMemo[current.x][current.y];
+          if (nextMemo.shortestCount > memo.shortestCount + 1) {
+            nextMemo.shortestCount = memo.shortestCount + 1;
+            queue.add(current);
           }
-
-          final shortestCount = _shortestGoalMemo[x][y].shortestCount;
-          if (shortestCount > memo.shortestCount + 1) {
-            _shortestGoalMemo[x][y].shortestCount = memo.shortestCount + 1;
-            _shortestGoalMemo[x][y].needRobot.clear();
-            queue.add(Position(x: x, y: y));
-          }
-          if (shortestCount >= memo.shortestCount + 1) {
-            // FIXME
+          if (nextMemo.shortestCount >= memo.shortestCount + 1) {
+            if (need == null) {
+              nextMemo.needRobot.addAll(memo.needRobot);
+            } else {
+              nextMemo.needRobot.add(need); // or memo.needRobot
+            }
           }
         }
       }
     }
-  }
-
-  int _findShortestCount() {
-    int _count(RobotColors color) {
-      final position = _robotPositions.positions[color.index];
-      final memo = _shortestGoalMemo[position.x][position.y];
-      var alreadyWall = memo.needRobot.isEmpty;
-      for (final need in memo.needRobot) {
-        if (_robotPositions.positions.contains(need)) {
-          alreadyWall = true;
-          break;
-        }
-      }
-      return memo.shortestCount - 1 + (alreadyWall ? 0 : 1);
-    }
-
-    final goalColor = board.goal.color;
-    int minCount = 1 << 30;
-    if (goalColor == null) {
-      for (final color in RobotColors.values) {
-        minCount = min(minCount, _count(color));
-      }
-    } else {
-      minCount = _count(goalColor);
-    }
-    return minCount;
   }
 
   void _solve() {
@@ -298,6 +266,34 @@ class SolveBoard {
       current = state.lastRobotPositionsHash!;
     }
     return MoveHistory(records: moveRecords.reversed.toList());
+  }
+
+  int _findShortestCount() {
+    int _count(RobotColors color) {
+      final position = _robotPositions.positions[color.index];
+      final memo = _shortestGoalMemo[position.x][position.y];
+      var alreadyWall = memo.needRobot.isEmpty;
+      if (!alreadyWall) {
+        for (final robotPosition in _robotPositions.positions) {
+          if (memo.needRobot.contains(robotPosition)) {
+            alreadyWall = true;
+            break;
+          }
+        }
+      }
+      return memo.shortestCount - 1 + (alreadyWall ? 0 : 1);
+    }
+
+    final goalColor = board.goal.color;
+    int minCount = 1 << 30;
+    if (goalColor == null) {
+      for (final color in RobotColors.values) {
+        minCount = min(minCount, _count(color));
+      }
+    } else {
+      minCount = _count(goalColor);
+    }
+    return minCount;
   }
 
   void _moved({
