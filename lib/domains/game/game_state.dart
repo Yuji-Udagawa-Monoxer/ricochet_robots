@@ -102,9 +102,10 @@ class GameState with _$GameState {
     );
   }
 
-  GameState onSolve(int searchCountMax) {
+  GameState onSolve(int searchFinishedCount) {
     final answerHistories =
-        SolveBoard(board: board, searchMaxCount: searchCountMax).answers;
+        SolveBoard(board: board, searchFinishedCount: searchFinishedCount)
+            .answers;
     for (var history in answerHistories) {
       debugPrint(history.toString());
     }

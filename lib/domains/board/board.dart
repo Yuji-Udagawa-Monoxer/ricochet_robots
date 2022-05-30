@@ -122,6 +122,21 @@ class Board with _$Board {
     );
   }
 
+  Board movedLight({
+    required Robot robot,
+    required Directions direction,
+    isCoolideOtherOrbot = true,
+  }) {
+    return copyWith(
+      robotPositions: robotPositions.movedAsPossibleLight(
+        board: this,
+        robot: robot,
+        direction: direction,
+        isCollideOtherRobot: isCoolideOtherOrbot,
+      ),
+    );
+  }
+
   Board movedTo(Robot robot, Position position) {
     return copyWith(
       robotPositions: robotPositions.move(color: robot.color, to: position),

@@ -67,6 +67,40 @@ class RobotPositions with _$RobotPositions {
     );
   }
 
+  RobotPositions movedAsPossibleLight({
+    required Board board,
+    required Robot robot,
+    required Directions direction,
+    required bool isCollideOtherRobot,
+  }) {
+    var current = position(color: robot.color);
+    var nextPosition = current.next(direction);
+    final otherRobotPositions = RobotColors.values
+        .where((c) => c != robot.color)
+        .map((c) => position(color: c))
+        .where((position) => current.isStraightDirection(position, direction));
+
+    bool _canMove(Position current, Position nextPosition) {
+      return board.grids.at(position: current).canMove(direction) &&
+          (!isCollideOtherRobot || !otherRobotPositions.contains(nextPosition));
+      /* final canMoveOpposite = board.grids
+        .at(position: nextPosition)
+        .canMove(opposite(direction: direction)); */
+    }
+
+    if (!_canMove(current, nextPosition)) {
+      return this;
+    }
+
+    do {
+      final tmpPosition = current.next(direction);
+      current = nextPosition;
+      nextPosition = tmpPosition;
+    } while (_canMove(current, nextPosition));
+
+    return move(color: robot.color, to: current);
+  }
+
   RobotPositions move({required RobotColors color, required Position to}) {
     return RobotPositions(
       red: color == RobotColors.red ? to : red,

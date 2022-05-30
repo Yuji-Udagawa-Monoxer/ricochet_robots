@@ -109,7 +109,7 @@ class HeaderWidget extends StatelessWidget {
               ? IconButton(
                   onPressed: () => context
                       .read<GameBloc>()
-                      .add(const SolveEvent(searchMaxCount: 5)),
+                      .add(const SolveEvent(searchMaxCount: 8)), // FIXME
                   icon: const Icon(
                     Icons.play_arrow,
                     color: Colors.grey,

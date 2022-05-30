@@ -58,4 +58,17 @@ class Position with _$Position {
   Position get rotateLeft {
     return Position(x: y, y: -x + 16 - 1);
   }
+
+  bool isStraightDirection(Position to, Directions direction) {
+    switch (direction) {
+      case Directions.up:
+        return to.x == x && to.y - y < 0;
+      case Directions.right:
+        return to.y == y && to.x - x > 0;
+      case Directions.down:
+        return to.x == x && to.y - y > 0;
+      case Directions.left:
+        return to.y == y && to.x - x < 0;
+    }
+  }
 }
