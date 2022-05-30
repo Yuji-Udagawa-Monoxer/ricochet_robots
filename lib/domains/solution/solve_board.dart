@@ -7,6 +7,7 @@ import 'package:ricochet_robots/domains/board/move_history.dart';
 import 'package:ricochet_robots/domains/board/position.dart';
 import 'package:ricochet_robots/domains/board/robot.dart';
 import 'package:ricochet_robots/domains/board/robot_positions.dart';
+import 'package:ricochet_robots/domains/board/robot_positions_mutable.dart';
 
 class StateMemo {
   final int robotPositionsHash;
@@ -34,14 +35,18 @@ class ShortestGoalMemo {
 
 class SolveBoard {
   Board board;
+
   final int searchFinishedCount;
   final bool isFinishedIfFound;
+
   final List<MoveHistory> answers = [];
+
   static const int _searchMaxCount = 20;
   final List<Queue<int>> queueList =
       List.generate(_searchMaxCount, (index) => Queue());
-  final Map<int, StateMemo> stateMemo = HashMap();
-  final List<List<List<Position>>> movedNext = List.generate(
+  final Map<int, StateMemo> _stateMemo = HashMap();
+  final RobotPositionsMutable _robotPositions = RobotPositionsMutable.init;
+  final List<List<List<Position>>> _movedNext = List.generate(
     16,
     (x) => List.generate(
       16,
@@ -51,7 +56,7 @@ class SolveBoard {
       ),
     ),
   );
-  final List<List<ShortestGoalMemo>> shortestGoalMemo = List.generate(
+  final List<List<ShortestGoalMemo>> _shortestGoalMemo = List.generate(
     16,
     (x) => List.generate(
       16,
@@ -65,10 +70,9 @@ class SolveBoard {
   final stopwatch = Stopwatch();
 
   SolveBoard({
-    required Board board,
+    required this.board,
     searchFinishedCount = -1,
-  })  : board = board.copyWith(),
-        searchFinishedCount = searchFinishedCount < 0
+  })  : searchFinishedCount = searchFinishedCount < 0
             ? _searchMaxCount
             : min(searchFinishedCount, _searchMaxCount),
         isFinishedIfFound = searchFinishedCount < 0 {
@@ -80,8 +84,9 @@ class SolveBoard {
   }
 
   void _init() {
-    final startRobotPositionsHash = RobotPositions.toHash(board.robotPositions);
-    stateMemo[startRobotPositionsHash] = StateMemo(
+    _robotPositions.set(board.robotPositions);
+    final startRobotPositionsHash = _robotPositions.toHash();
+    _stateMemo[startRobotPositionsHash] = StateMemo(
       robotPositionsHash: startRobotPositionsHash,
       moveCount: 0,
       lastRobotPositionsHash: null,
@@ -89,16 +94,12 @@ class SolveBoard {
     );
     queueList[0].addLast(startRobotPositionsHash);
 
+    _makeMovedNext(startRobotPositionsHash);
+
     _makeShortestGoalMemo();
-
-    _makeMovedNext();
   }
 
-  void _makeShortestGoalMemo() {
-    // FIXME
-  }
-
-  void _makeMovedNext() {
+  void _makeMovedNext(int originalHash) {
     board = board.copyWith(
       robotPositions: const RobotPositions(
         red: Position(x: 0, y: 0),
@@ -107,6 +108,7 @@ class SolveBoard {
         yellow: Position(x: 16, y: 16),
       ),
     );
+
     for (var x = 0; x < 16; ++x) {
       for (var y = 0; y < 16; ++y) {
         for (final direction in Directions.values) {
@@ -119,11 +121,19 @@ class SolveBoard {
             robot: const Robot(color: RobotColors.red),
             direction: direction,
           );
-          movedNext[x][y][direction.index] =
+          _movedNext[x][y][direction.index] =
               board.robotPositions.red.copyWith();
         }
       }
     }
+
+    board = board.copyWith(
+      robotPositions: RobotPositions.fromHash(originalHash),
+    );
+  }
+
+  void _makeShortestGoalMemo() {
+    // FIXME
   }
 
   void _solve() {
@@ -136,22 +146,21 @@ class SolveBoard {
   }
 
   void _solveInner(int currentHash) {
-    // assert(stateMemo.containsKey(currentHash));
+    // assert(_stateMemo.containsKey(currentHash));
 
     for (final robotColor in RobotColors.values) {
       for (final direction in Directions.values) {
         // Move
-        _restore(currentHash); // 1/4 of the total throughput
-        final nextRobotPositions = _moved(
-          // 3/4 of the total throughput
+        _robotPositions.fromHash(currentHash); // 1/4 of the total throughput
+        _moved(
           robotColor: robotColor,
           direction: direction,
-        );
+        ); // 3/4 of the total throughput
 
         // Already searched
-        final nextHash = RobotPositions.toHash(nextRobotPositions);
-        final nextMoveCount = stateMemo[currentHash]!.moveCount + 1;
-        final nextStateMemo = stateMemo[nextHash];
+        final nextHash = _robotPositions.toHash();
+        final nextMoveCount = _stateMemo[currentHash]!.moveCount + 1;
+        final nextStateMemo = _stateMemo[nextHash];
         if (nextStateMemo != null) {
           if (nextStateMemo.moveCount <= nextMoveCount) {
             continue;
@@ -159,7 +168,7 @@ class SolveBoard {
         }
 
         // add memo
-        stateMemo[nextHash] = StateMemo(
+        _stateMemo[nextHash] = StateMemo(
           robotPositionsHash: nextHash,
           moveCount: nextMoveCount,
           lastRobotPositionsHash: currentHash,
@@ -167,9 +176,10 @@ class SolveBoard {
         );
 
         // IsGoal
-        final nextRobotPosition =
-            nextRobotPositions.position(color: robotColor);
-        if (board.isGoal(nextRobotPosition, Robot(color: robotColor))) {
+        if (board.isGoal(
+          _robotPositions.positions[robotColor.index],
+          Robot(color: robotColor),
+        )) {
           final newHistory = _makeMoveHistory(nextHash);
           if (_isDifferentHistory(newHistory)) {
             answers.add(newHistory);
@@ -202,8 +212,8 @@ class SolveBoard {
     final List<MoveRecord> moveRecords = [];
     var current = robotPositionsHash;
     while (true) {
-      // assert(stateMemo.containsKey(current));
-      final state = stateMemo[current]!;
+      // assert(_stateMemo.containsKey(current));
+      final state = _stateMemo[current]!;
       if (state.moveCount == 0) {
         break;
       }
@@ -215,26 +225,26 @@ class SolveBoard {
     return MoveHistory(records: moveRecords.reversed.toList());
   }
 
-  void _restore(int robotPositionsHash) {
-    board = board.copyWith(
-        robotPositions: RobotPositions.fromHash(robotPositionsHash));
-  }
-
-  RobotPositions _moved({
+  void _moved({
     required RobotColors robotColor,
     required Directions direction,
   }) {
-    var currentPositions = board.robotPositions;
-    var current = currentPositions.position(color: robotColor);
-    final candidatesRobotPositions = RobotColors.values
-        .where((c) => c != robotColor)
-        .map((c) => currentPositions.position(color: c))
-        .where((position) => current.isStraightDirection(position, direction))
-        .map((position) =>
-            position.next(Directions.values[(direction.index + 2) % 4]))
-        .toList();
+    var current = _robotPositions.positions[robotColor.index];
+    final candidatesRobotPositions = [];
+    // INFO: If you use map/where, it slows down
+    for (final color in RobotColors.values) {
+      if (color == robotColor) {
+        continue;
+      }
+      final position = _robotPositions.positions[color.index];
+      if (!current.isStraightDirection(position, direction)) {
+        continue;
+      }
+      candidatesRobotPositions
+          .add(position.next(Directions.values[(direction.index + 2) % 4]));
+    }
     candidatesRobotPositions
-        .add(movedNext[current.x][current.y][direction.index]);
+        .add(_movedNext[current.x][current.y][direction.index]);
     final toPosition = () {
       switch (direction) {
         case Directions.right:
@@ -260,9 +270,7 @@ class SolveBoard {
                   0, (int previousValue, e) => max(previousValue, e.y)));
       }
     }();
-    return board.robotPositions
-        .copyWith()
-        .move(color: robotColor, to: toPosition);
+    _robotPositions.move(color: robotColor, to: toPosition);
   }
 
   void _resultLog() {
