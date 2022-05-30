@@ -31,6 +31,9 @@ class ShortestGoalMemo {
   ShortestGoalMemo({
     required this.current,
   });
+
+  @override
+  String toString() => "$current $shortestCount $needRobot";
 }
 
 class SolveBoard {
@@ -163,16 +166,23 @@ class SolveBoard {
         while (board.grids.grids[current.y][current.x].canMove(direction)) {
           current = current.next(direction);
           final nextMemo = _shortestGoalMemo[current.x][current.y];
+          if (nextMemo.shortestCount >= memo.shortestCount + 1) {
+            if (!(nextMemo.shortestCount == memo.shortestCount + 1 &&
+                nextMemo.needRobot.isEmpty)) {
+              if (need == null) {
+                if (memo.needRobot.isEmpty) {
+                  nextMemo.needRobot.clear();
+                } else {
+                  nextMemo.needRobot.addAll(memo.needRobot);
+                }
+              } else {
+                nextMemo.needRobot.add(need); // or memo.needRobot
+              }
+            }
+          }
           if (nextMemo.shortestCount > memo.shortestCount + 1) {
             nextMemo.shortestCount = memo.shortestCount + 1;
             queue.add(current);
-          }
-          if (nextMemo.shortestCount >= memo.shortestCount + 1) {
-            if (need == null) {
-              nextMemo.needRobot.addAll(memo.needRobot);
-            } else {
-              nextMemo.needRobot.add(need); // or memo.needRobot
-            }
           }
         }
       }
