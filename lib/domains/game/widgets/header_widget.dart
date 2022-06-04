@@ -115,7 +115,7 @@ class HeaderWidget extends StatelessWidget {
           value: state.searchCount,
           onChanged: (int? value) =>
               bloc.add(SetSearchCountEvent(searchCount: value ?? -1)),
-          items: List.generate(16, (index) => index)
+          items: List.generate(30 + 1, (index) => index)
               .map<DropdownMenuItem<int>>((int value) {
             return DropdownMenuItem<int>(
               value: value == 0 ? -1 : value,

@@ -44,7 +44,7 @@ class SolveBoard {
 
   final List<MoveHistory> answers = [];
 
-  static const int _searchMaxCount = 20;
+  static const int _searchMaxCount = 30;
   final List<Queue<int>> queueList =
       List.generate(_searchMaxCount, (index) => Queue());
   final Map<int, StateMemo> _stateMemo = {};
