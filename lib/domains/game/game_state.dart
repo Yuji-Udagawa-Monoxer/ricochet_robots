@@ -118,5 +118,6 @@ class GameState with _$GameState {
   GameState get initialized => copyWith(
         mode: GameMode.play,
         histories: [],
+        answerHistories: [],
       );
 }

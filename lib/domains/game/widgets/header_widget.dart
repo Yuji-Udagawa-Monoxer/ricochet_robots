@@ -136,8 +136,8 @@ class HeaderWidget extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border.all(),
       ),
-      height: 60,
-      width: 450,
+      height: 50,
+      width: double.infinity,
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,9 +224,6 @@ class HeaderWidget extends StatelessWidget {
               ),
               Row(
                 children: [
-                  currentMode != GameMode.edit
-                      ? _buildAnswers(context, state)
-                      : const SizedBox.shrink(),
                   const Expanded(child: SizedBox.shrink()),
                   currentMode != GameMode.edit
                       ? _buildSolveForm(context, state)
@@ -235,6 +232,7 @@ class HeaderWidget extends StatelessWidget {
                   _buildEdit(context, state),
                 ],
               ),
+              _buildAnswers(context, state),
             ],
           ),
         );
