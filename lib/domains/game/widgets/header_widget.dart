@@ -5,6 +5,7 @@ import 'package:ricochet_robots/domains/board/board.dart';
 import 'package:ricochet_robots/domains/board/board_id.dart';
 import 'package:ricochet_robots/domains/board/goal.dart';
 import 'package:ricochet_robots/domains/board/robot.dart';
+import 'package:ricochet_robots/domains/board/robot_positions.dart';
 import 'package:ricochet_robots/domains/edit/edit.dart';
 import 'package:ricochet_robots/domains/edit/editable_icon.dart';
 import 'package:ricochet_robots/domains/game/game_bloc.dart';
@@ -89,97 +90,155 @@ class HeaderWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildSolveForm() {
-    return BlocBuilder<GameBloc, GameState>(
-      builder: (context, state) {
-        final bloc = context.read<GameBloc>();
-        return Row(
+  Widget _buildSolveForm(BuildContext context, GameState state) {
+    final bloc = context.read<GameBloc>();
+    return Row(
+      children: [
+        IconButton(
+          onPressed: () => debugPrint(
+              RobotPositions.toHash(board.robotPositions).toString()),
+          icon: const Icon(
+            Icons.plagiarism,
+            color: Colors.grey,
+            size: _iconSize,
+          ),
+        ),
+        IconButton(
+          onPressed: () => bloc.add(const SolveEvent()),
+          icon: const Icon(
+            Icons.play_arrow,
+            color: Colors.grey,
+            size: _iconSize,
+          ),
+        ),
+        DropdownButton<int>(
+          value: state.searchCount,
+          onChanged: (int? value) =>
+              bloc.add(SetSearchCountEvent(searchCount: value ?? -1)),
+          items: List.generate(16, (index) => index)
+              .map<DropdownMenuItem<int>>((int value) {
+            return DropdownMenuItem<int>(
+              value: value == 0 ? -1 : value,
+              child: Text(value == 0 ? 'First' : value.toString()),
+            );
+          }).toList(),
+        ),
+        const SizedBox(width: 8.0),
+      ],
+    );
+  }
+
+  Widget _buildAnswers(BuildContext context, GameState state) {
+    if (state.answerHistories.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(),
+      ),
+      height: 60,
+      width: 450,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            IconButton(
-              onPressed: () => bloc.add(const SolveEvent()),
-              icon: const Icon(
-                Icons.play_arrow,
-                color: Colors.grey,
-                size: _iconSize,
-              ),
-            ),
-            DropdownButton<int>(
-              value: state.searchCount,
-              onChanged: (int? value) =>
-                  bloc.add(SetSearchCountEvent(searchCount: value ?? -1)),
-              items: List.generate(16, (index) => index)
-                  .map<DropdownMenuItem<int>>((int value) {
-                return DropdownMenuItem<int>(
-                  value: value == 0 ? -1 : value,
-                  child: Text(value == 0 ? 'First' : value.toString()),
-                );
-              }).toList(),
-            ),
-            const SizedBox(width: 8.0),
+            ...state.answerHistories.map((history) => Text(history.toString()))
           ],
-        );
-      },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEdit(BuildContext context, GameState state) {
+    final toEditMode = currentMode != GameMode.edit;
+    return Row(
+      children: [
+        toEditMode
+            ? const SizedBox.shrink()
+            : Row(
+                children: [
+                  EditableIcon(
+                    iconData: Icons.rotate_right,
+                    color: Colors.grey,
+                    size: 20,
+                    editAction: const EditAction(rotateRightGrids: true),
+                    currentMode: currentMode,
+                  ),
+                  Text("Edit Mode", style: _textStyle),
+                ],
+              ),
+        IconButton(
+          onPressed: () => context
+              .read<GameBloc>()
+              .add(EditModeEvent(toEditMode: toEditMode)),
+          icon: Icon(
+            toEditMode ? Icons.edit : Icons.stop,
+            color: Colors.grey,
+            size: _iconSize,
+          ),
+        ),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final toEditMode = currentMode != GameMode.edit;
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        children: [
-          Row(
+    return BlocBuilder<GameBloc, GameState>(
+      builder: (context, state) {
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
             children: [
-              Text("Move ", style: _textStyle),
-              _target(board.goal, context),
-              Text(" to ", style: _textStyle),
-              _goal(board.goal, context),
+              Row(
+                children: [
+                  Row(
+                    children: [
+                      Text("Move ", style: _textStyle),
+                      _target(board.goal, context),
+                      Text(" to ", style: _textStyle),
+                      _goal(board.goal, context),
+                    ],
+                  ),
+                  const Expanded(child: SizedBox.shrink()),
+                  Text("${histories.length.toString()} moves",
+                      style: _textStyle),
+                  const SizedBox(width: 8.0),
+                  IconButton(
+                    onPressed: () =>
+                        context.read<GameBloc>().add(const RestartEvent()),
+                    icon: const Icon(
+                      Icons.refresh,
+                      color: Colors.grey,
+                      size: _iconSize,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _copyUrlToClipBoard,
+                    icon: const Icon(
+                      Icons.link,
+                      color: Colors.grey,
+                      size: _iconSize,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  currentMode != GameMode.edit
+                      ? _buildAnswers(context, state)
+                      : const SizedBox.shrink(),
+                  const Expanded(child: SizedBox.shrink()),
+                  currentMode != GameMode.edit
+                      ? _buildSolveForm(context, state)
+                      : const SizedBox.shrink(),
+                  const SizedBox(width: 8.0),
+                  _buildEdit(context, state),
+                ],
+              ),
             ],
           ),
-          const Expanded(child: SizedBox.shrink()),
-          toEditMode
-              ? _buildSolveForm()
-              : EditableIcon(
-                  iconData: Icons.rotate_right,
-                  color: Colors.grey,
-                  size: 20,
-                  editAction: const EditAction(rotateRightGrids: true),
-                  currentMode: currentMode,
-                ),
-          Text("${histories.length.toString()} moves", style: _textStyle),
-          const SizedBox(width: 8.0),
-          IconButton(
-            onPressed: () => context.read<GameBloc>().add(const RestartEvent()),
-            icon: const Icon(
-              Icons.refresh,
-              color: Colors.grey,
-              size: _iconSize,
-            ),
-          ),
-          IconButton(
-            onPressed: _copyUrlToClipBoard,
-            icon: const Icon(
-              Icons.link,
-              color: Colors.grey,
-              size: _iconSize,
-            ),
-          ),
-          IconButton(
-            onPressed: () => context
-                .read<GameBloc>()
-                .add(EditModeEvent(toEditMode: toEditMode)),
-            icon: Icon(
-              toEditMode ? Icons.edit : Icons.stop,
-              color: Colors.grey,
-              size: _iconSize,
-            ),
-          ),
-          toEditMode
-              ? const SizedBox.shrink()
-              : Text("Edit Mode", style: _textStyle),
-        ],
-      ),
+        );
+      },
     );
   }
 }

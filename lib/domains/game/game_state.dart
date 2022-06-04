@@ -12,7 +12,7 @@ import 'package:ricochet_robots/domains/solution/solve_board.dart';
 
 part 'game_state.freezed.dart';
 
-enum GameMode { play, showResult, edit }
+enum GameMode { play, showResult, edit, wait }
 
 @freezed
 class GameState with _$GameState {
@@ -29,6 +29,7 @@ class GameState with _$GameState {
   }) = _GameState;
 
   bool get shouldShowResult => mode == GameMode.showResult;
+  bool get shouldWait => mode == GameMode.wait;
 
   static GameState initialize({required BoardId? boardId}) {
     final board = boardId != null ? toBoard(boardId: boardId) : Board.random;
@@ -104,12 +105,9 @@ class GameState with _$GameState {
     );
   }
 
-  GameState onSolve() {
+  GameState onSolve(String _) {
     final answerHistories =
         SolveBoard(board: board, searchFinishedCount: searchCount).answers;
-    for (var history in answerHistories) {
-      debugPrint(history.toString());
-    }
     return copyWith(answerHistories: answerHistories);
   }
 

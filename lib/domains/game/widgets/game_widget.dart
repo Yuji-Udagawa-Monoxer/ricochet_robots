@@ -6,6 +6,7 @@ import 'package:ricochet_robots/domains/game/game_state.dart';
 import 'package:ricochet_robots/domains/game/widgets/control_buttons.dart';
 import 'package:ricochet_robots/domains/game/widgets/header_widget.dart';
 import 'package:ricochet_robots/domains/game/widgets/result_dialog.dart';
+import 'package:ricochet_robots/domains/game/widgets/wait_dialog.dart';
 
 class GameWidget extends StatelessWidget {
   const GameWidget({Key? key}) : super(key: key);
@@ -24,7 +25,7 @@ class GameWidget extends StatelessWidget {
                   padding: const EdgeInsets.all(2.0),
                   constraints: const BoxConstraints(
                     maxWidth: 800,
-                    maxHeight: 800,
+                    maxHeight: 1000,
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -52,6 +53,10 @@ class GameWidget extends StatelessWidget {
                   onPressCancel: () => bloc.add(const ReplayEvent()),
                   onPressButton: () => bloc.add(const RestartEvent()),
                 ),
+              ),
+              Visibility(
+                visible: state.shouldWait,
+                child: const WaitDialog(),
               ),
             ],
           ),

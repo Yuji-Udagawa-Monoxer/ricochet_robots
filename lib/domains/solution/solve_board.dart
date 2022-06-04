@@ -26,7 +26,7 @@ class StateMemo {
 class ShortestGoalMemo {
   final Position current;
   int shortestCount = 1 << 30;
-  final Set<Position> needRobot = HashSet(); // or, empty => not need
+  final Set<Position> needRobot = {}; // or, empty => not need
 
   ShortestGoalMemo({
     required this.current,
@@ -47,7 +47,7 @@ class SolveBoard {
   static const int _searchMaxCount = 20;
   final List<Queue<int>> queueList =
       List.generate(_searchMaxCount, (index) => Queue());
-  final Map<int, StateMemo> _stateMemo = HashMap();
+  final Map<int, StateMemo> _stateMemo = {};
   final RobotPositionsMutable _robotPositions = RobotPositionsMutable.init;
   final List<List<List<Position>>> _movedNext = List.generate(
     16,
@@ -140,6 +140,7 @@ class SolveBoard {
   void _makeShortestGoalMemo() {
     final Queue<Position> queue = Queue();
     final goalColor = board.goal.color ?? RobotColors.red;
+
     for (var x = 0; x < 16; ++x) {
       for (var y = 0; y < 16; ++y) {
         final position = Position(x: x, y: y);
@@ -149,6 +150,7 @@ class SolveBoard {
         }
       }
     }
+
     while (queue.isNotEmpty) {
       final firstPosition = queue.removeFirst();
       final memo = _shortestGoalMemo[firstPosition.x][firstPosition.y];

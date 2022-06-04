@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ricochet_robots/domains/board/board_id.dart';
 import 'package:ricochet_robots/domains/board/robot.dart';
@@ -23,7 +24,12 @@ class GameBloc extends Bloc<GameEvent, GameState> {
         emit(state.onEditModeEvent(toEditMode: event.toEditMode)));
     on<EditBoardEvent>((event, emit) =>
         emit(state.onEditBoardEvent(editAction: event.editAction)));
-    on<SolveEvent>((event, emit) => emit(state.onSolve()));
+    on<SolveEvent>((event, emit) async {
+      emit(state.copyWith(mode: GameMode.wait));
+      await Future.delayed(const Duration(seconds: 5), () {});
+      emit(await compute(state.onSolve, ""));
+      emit(state.copyWith(mode: GameMode.play));
+    });
     on<SetSearchCountEvent>(
         (event, emit) => emit(state.onSetSearchCount(event.searchCount)));
   }
