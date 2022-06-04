@@ -105,9 +105,10 @@ class GameState with _$GameState {
     );
   }
 
-  GameState onSolve(String _) {
-    final answerHistories =
-        SolveBoard(board: board, searchFinishedCount: searchCount).answers;
+  GameState onSolve() {
+    final solveBoard =
+        SolveBoard(board: board, searchFinishedCount: searchCount);
+    final answerHistories = solveBoard.solve();
     return copyWith(answerHistories: answerHistories);
   }
 

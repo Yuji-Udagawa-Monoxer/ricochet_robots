@@ -11,7 +11,6 @@ class WaitDialog extends StatelessWidget {
       color: Colors.black12,
       child: const AlertDialog(
         title: Text('Waiting'),
-        content: CircularProgressIndicator(),
       ),
     );
   }

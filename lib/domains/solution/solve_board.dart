@@ -78,12 +78,15 @@ class SolveBoard {
   })  : searchFinishedCount = searchFinishedCount < 0
             ? _searchMaxCount
             : min(searchFinishedCount, _searchMaxCount),
-        isFinishedIfFound = searchFinishedCount < 0 {
+        isFinishedIfFound = searchFinishedCount < 0;
+
+  List<MoveHistory> solve() {
     stopwatch.start();
     _init();
     _solve();
     stopwatch.stop();
     _resultLog();
+    return answers;
   }
 
   void _init() {
@@ -359,6 +362,9 @@ class SolveBoard {
   void _resultLog() {
     debugPrint("SearchNum: $searchStateNum");
     debugPrint("Time: ${stopwatch.elapsedMilliseconds} [msec]");
+    for (final answer in answers) {
+      debugPrint(answer.toString());
+    }
   }
 
   List<MoveHistory> sample() => [
