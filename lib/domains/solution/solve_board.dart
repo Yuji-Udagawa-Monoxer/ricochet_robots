@@ -368,26 +368,26 @@ class SolveBoard {
   }
 
   List<MoveHistory> sample() => [
-        const MoveHistory(records: [
-          MoveRecord(
+        MoveHistory(records: [
+          const MoveRecord(
             color: RobotColors.green,
             direction: Directions.down,
           ),
-          MoveRecord(
+          const MoveRecord(
             color: RobotColors.red,
             direction: Directions.up,
           ),
         ]),
-        const MoveHistory(records: [
-          MoveRecord(
+        MoveHistory(records: [
+          const MoveRecord(
             color: RobotColors.blue,
             direction: Directions.right,
           ),
-          MoveRecord(
+          const MoveRecord(
             color: RobotColors.blue,
             direction: Directions.left,
           ),
-          MoveRecord(
+          const MoveRecord(
             color: RobotColors.yellow,
             direction: Directions.up,
           ),

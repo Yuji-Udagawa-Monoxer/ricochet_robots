@@ -1,12 +1,24 @@
+import 'dart:io';
+
 import 'package:ricochet_robots/domains/board/position.dart';
 import 'package:ricochet_robots/domains/board/robot.dart';
 
 class MoveHistory {
   final List<MoveRecord> records;
+  final Map<int, int> recordMap;
 
-  const MoveHistory({
+  MoveHistory({
     required this.records,
-  });
+  }) : recordMap = makeRecordMap(records);
+
+  static Map<int, int> makeRecordMap(List<MoveRecord> records) {
+    final recordMap = <int, int>{};
+    for (var x in records) {
+      recordMap[x.index] =
+          recordMap.containsKey(x.index) ? recordMap[x.index]! + 1 : 1;
+    }
+    return recordMap;
+  }
 
   @override
   String toString() => [
@@ -15,8 +27,9 @@ class MoveHistory {
       ].join(" ");
 
   bool containsAll(MoveHistory other) {
-    return other.records.every(
-        (otherRecord) => records.any((record) => record.equal(otherRecord)));
+    return other.recordMap.entries.every(
+      (m) => m.value <= (recordMap[m.key] ?? 0),
+    );
   }
 }
 
@@ -31,6 +44,10 @@ class MoveRecord {
 
   bool equal(MoveRecord other) =>
       color == other.color && direction == other.direction;
+
+  int get index {
+    return color.index * Directions.values.length + direction.index;
+  }
 
   @override
   String toString() {
