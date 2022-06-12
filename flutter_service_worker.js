@@ -7,9 +7,9 @@ const RESOURCES = {
 "icons/Icon-192.png": "ac9a721a12bbc803b44f645561ecb1e1",
 "icons/Icon-maskable-512.png": "301a7604d45b3e739efc881eb04896ea",
 "icons/Icon-512.png": "96e752610906ba2a93c65f8abe1645f1",
-"index.html": "69c3e3c6a10d4ed2cec5492d2222cf8e",
-"/": "69c3e3c6a10d4ed2cec5492d2222cf8e",
-"main.dart.js": "30f11c7b8ed99c1c68779b135c9a9214",
+"index.html": "de5ab0a25b21d742f5f242c1d7440f26",
+"/": "de5ab0a25b21d742f5f242c1d7440f26",
+"main.dart.js": "36f59f5e90c2e2dcca173a9931f8eb59",
 "version.json": "89f7a7788fa85a560e48ab312a33dc07",
 "favicon.png": "5dcef449791fa27946b3d35ad8803796",
 "flutter.js": "eb2682e33f25cd8f1fc59011497c35f8",
@@ -20,8 +20,8 @@ const RESOURCES = {
 "assets/FontManifest.json": "7b2a36307916a9721811788013e65289",
 "assets/AssetManifest.json": "99914b932bd37a50b983c5e7c90ae93b",
 "assets/fonts/MaterialIcons-Regular.otf": "95db9098c58fd6db106f1116bae85a0b",
-"assets/NOTICES": "51cdc13c9c4daeed7fa5bf3e6125940a",
-"manifest.json": "b19cc0a9bc6ab8489673015e7d81b873"
+"assets/NOTICES": "0edf7e3b05c714927389d952b440bd4e",
+"manifest.json": "2aae1936ff9525bed43a842858076695"
 };
 
 // The application shell files that are downloaded before a service worker can
