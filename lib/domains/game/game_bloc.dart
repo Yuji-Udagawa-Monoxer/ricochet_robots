@@ -7,8 +7,13 @@ import 'package:ricochet_robots/domains/game/game_state.dart';
 import '../board/position.dart';
 
 class GameBloc extends Bloc<GameEvent, GameState> {
-  GameBloc({required BoardId? boardId})
-      : super(GameState.initialize(boardId: boardId)) {
+  GameBloc({
+    required BoardId? boardId,
+    unlockSecretButton = false,
+  }) : super(GameState.initialize(
+          boardId: boardId,
+          unlockSecretButton: unlockSecretButton,
+        )) {
     on<SelectColorEvent>(
       (event, emit) => emit(state.onColorSelected(color: event.color)),
     );

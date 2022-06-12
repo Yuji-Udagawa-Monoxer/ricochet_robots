@@ -26,19 +26,26 @@ class GameState with _$GameState {
     required Position? selectedGridForEdit,
     required List<MoveHistory> answerHistories,
     required int searchCount,
+    required bool unlockSecretButton,
   }) = _GameState;
 
   bool get shouldShowResult => mode == GameMode.showResult;
   bool get shouldWait => mode == GameMode.wait;
 
-  static GameState initialize({required BoardId? boardId}) {
+  static GameState initialize({
+    required BoardId? boardId,
+    bool unlockSecretButton = false,
+  }) {
     final board = boardId != null ? toBoard(boardId: boardId) : Board.random;
-    return init(board: board);
+    return init(board: board, unlockSecretButton: unlockSecretButton);
   }
 
   /// Reset state and returns new state.
   @visibleForTesting
-  static GameState init({required Board board}) {
+  static GameState init({
+    required Board board,
+    bool unlockSecretButton = false,
+  }) {
     return GameState(
       mode: GameMode.play,
       board: board,
@@ -47,6 +54,7 @@ class GameState with _$GameState {
       selectedGridForEdit: null,
       answerHistories: [],
       searchCount: -1,
+      unlockSecretButton: unlockSecretButton,
     );
   }
 

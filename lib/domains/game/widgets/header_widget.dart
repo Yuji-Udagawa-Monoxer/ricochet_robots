@@ -222,16 +222,18 @@ class HeaderWidget extends StatelessWidget {
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  const Expanded(child: SizedBox.shrink()),
-                  currentMode != GameMode.edit
-                      ? _buildSolveForm(context, state)
-                      : const SizedBox.shrink(),
-                  const SizedBox(width: 8.0),
-                  _buildEdit(context, state),
-                ],
-              ),
+              state.unlockSecretButton
+                  ? Row(
+                      children: [
+                        const Expanded(child: SizedBox.shrink()),
+                        currentMode != GameMode.edit
+                            ? _buildSolveForm(context, state)
+                            : const SizedBox.shrink(),
+                        const SizedBox(width: 8.0),
+                        _buildEdit(context, state),
+                      ],
+                    )
+                  : const SizedBox.shrink(),
               _buildAnswers(context, state),
             ],
           ),
