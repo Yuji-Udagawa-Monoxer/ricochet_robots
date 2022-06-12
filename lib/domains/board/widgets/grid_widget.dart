@@ -127,6 +127,7 @@ class _State extends State<GridWidget> {
     }
     return LayoutBuilder(
       builder: (context, constraint) {
+        final wallWidth = constraint.biggest.width * 0.25;
         return Stack(
           alignment: AlignmentDirectional.center,
           children: [
@@ -134,7 +135,7 @@ class _State extends State<GridWidget> {
               left: 0,
               top: 0,
               width: constraint.biggest.width,
-              height: 6.0,
+              height: wallWidth,
               child: InkWell(
                 onTap: () => context.read<GameBloc>().add(EditBoardEvent(
                     editAction: EditAction(topBorder: widget.position))),
@@ -144,7 +145,7 @@ class _State extends State<GridWidget> {
             Positioned(
               left: 0,
               top: 0,
-              width: 6.0,
+              width: wallWidth,
               height: constraint.biggest.height,
               child: InkWell(
                 onTap: () => context.read<GameBloc>().add(EditBoardEvent(
@@ -154,9 +155,9 @@ class _State extends State<GridWidget> {
             ),
             Positioned(
               left: 0,
-              top: constraint.biggest.height - 6.0,
+              top: constraint.biggest.height - wallWidth,
               width: constraint.biggest.width,
-              height: 6.0,
+              height: wallWidth,
               child: InkWell(
                 onTap: () => context.read<GameBloc>().add(EditBoardEvent(
                     editAction: EditAction(downBorder: widget.position))),
@@ -164,9 +165,9 @@ class _State extends State<GridWidget> {
               ),
             ),
             Positioned(
-              left: constraint.biggest.width - 6.0,
+              left: constraint.biggest.width - wallWidth,
               top: 0,
-              width: 6.0,
+              width: wallWidth,
               height: constraint.biggest.height,
               child: InkWell(
                 onTap: () => context.read<GameBloc>().add(EditBoardEvent(
