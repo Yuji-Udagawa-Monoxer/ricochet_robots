@@ -94,6 +94,18 @@ class HeaderWidget extends StatelessWidget {
     final bloc = context.read<GameBloc>();
     return Row(
       children: [
+        DropdownButton<int>(
+          value: state.shuffleGridCount,
+          onChanged: (int? value) =>
+              bloc.add(SetShuffleGridCountEvent(shuffleGridCount: value ?? 0)),
+          items: List.generate(100 + 1, (index) => index)
+              .map<DropdownMenuItem<int>>((int value) {
+            return DropdownMenuItem<int>(
+              value: value,
+              child: Text(value.toString()),
+            );
+          }).toList(),
+        ),
         IconButton(
           onPressed: () => debugPrint(
               RobotPositions.toHash(board.robotPositions).toString()),

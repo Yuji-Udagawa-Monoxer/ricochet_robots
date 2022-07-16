@@ -5,6 +5,12 @@ import 'package:ricochet_robots/domains/board/robot.dart';
 abstract class Rotatable {
   Grid get rotateRight;
   Grid copyWithCanMoveOnly(Grid grid);
+  Grid copyWith({
+    bool? canMoveUp,
+    bool? canMoveRight,
+    bool? canMoveDown,
+    bool? canMoveLeft,
+  });
 }
 
 abstract class Grid implements Rotatable {
@@ -100,6 +106,21 @@ class NormalGrid extends Grid {
       canMoveLeft: directions == Directions.left ? canMove : canMoveLeft,
     );
   }
+
+  @override
+  NormalGrid copyWith({
+    bool? canMoveUp,
+    bool? canMoveRight,
+    bool? canMoveDown,
+    bool? canMoveLeft,
+  }) {
+    return NormalGrid(
+      canMoveUp: canMoveUp ?? this.canMoveUp,
+      canMoveRight: canMoveRight ?? this.canMoveRight,
+      canMoveDown: canMoveDown ?? this.canMoveDown,
+      canMoveLeft: canMoveLeft ?? this.canMoveLeft,
+    );
+  }
 }
 
 abstract class GoalGrid extends Grid {
@@ -175,6 +196,23 @@ class NormalGoalGrid extends GoalGrid {
       canMoveLeft: directions == Directions.left ? canMove : canMoveLeft,
     );
   }
+
+  @override
+  NormalGoalGrid copyWith({
+    bool? canMoveUp,
+    bool? canMoveRight,
+    bool? canMoveDown,
+    bool? canMoveLeft,
+  }) {
+    return NormalGoalGrid(
+      color: color,
+      type: type,
+      canMoveUp: canMoveUp ?? this.canMoveUp,
+      canMoveRight: canMoveRight ?? this.canMoveRight,
+      canMoveDown: canMoveDown ?? this.canMoveDown,
+      canMoveLeft: canMoveLeft ?? this.canMoveLeft,
+    );
+  }
 }
 
 class WildGoalGrid extends GoalGrid {
@@ -222,6 +260,21 @@ class WildGoalGrid extends GoalGrid {
       canMoveRight: directions == Directions.right ? canMove : canMoveRight,
       canMoveDown: directions == Directions.down ? canMove : canMoveDown,
       canMoveLeft: directions == Directions.left ? canMove : canMoveLeft,
+    );
+  }
+
+  @override
+  WildGoalGrid copyWith({
+    bool? canMoveUp,
+    bool? canMoveRight,
+    bool? canMoveDown,
+    bool? canMoveLeft,
+  }) {
+    return WildGoalGrid(
+      canMoveUp: canMoveUp ?? this.canMoveUp,
+      canMoveRight: canMoveRight ?? this.canMoveRight,
+      canMoveDown: canMoveDown ?? this.canMoveDown,
+      canMoveLeft: canMoveLeft ?? this.canMoveLeft,
     );
   }
 }

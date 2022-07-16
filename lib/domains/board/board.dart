@@ -36,12 +36,13 @@ class Board with _$Board {
     );
   }
 
-  static Board get random {
+  static Board random(int shuffleGridCount) {
     return synthesize(
       boardQuarterRed: randomRedBoard(),
       boardQuarterBlue: randomBlueBoard(),
       boardQuarterGreen: randomGreenBoard(),
       boardQuarterYellow: randomYellowBoard(),
+      shuffleGridCount: shuffleGridCount,
     );
   }
 
@@ -50,6 +51,7 @@ class Board with _$Board {
     required BoardQuarterBlue boardQuarterBlue,
     required BoardQuarterGreen boardQuarterGreen,
     required BoardQuarterYellow boardQuarterYellow,
+    int shuffleGridCount = 0,
   }) {
     final boardQuarters = [
       boardQuarterRed,
@@ -67,14 +69,26 @@ class Board with _$Board {
         boardQuarters[3].rotateRight.rotateRight.rotateRight.gridsQuarter.grids;
     final leftHalfGrids = topLeftGrids + bottomLeftGrids;
     final rightHalfGrids = topRightGrids + bottomRightGrids;
-    return init(
-      grids: Grids(
-        grids: fixQuarterBorder(
-          List.generate(leftHalfGrids.length, (y) {
-            return leftHalfGrids[y] + rightHalfGrids[y];
-          }),
-        ),
+
+    var newGrids = Grids(
+      grids: fixQuarterBorder(
+        List.generate(leftHalfGrids.length, (y) {
+          return leftHalfGrids[y] + rightHalfGrids[y];
+        }),
       ),
+    );
+
+    for (var i = 0; i < shuffleGridCount; ++i) {
+      final nextGrids = newGrids.shuffleGrid();
+      if (nextGrids == null) {
+        --i;
+      } else {
+        newGrids = nextGrids;
+      }
+    }
+
+    return init(
+      grids: newGrids,
     );
   }
 
