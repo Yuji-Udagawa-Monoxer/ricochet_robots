@@ -47,7 +47,6 @@ class SolveBoard {
 
   static const int _searchMaxCount = 30;
   static const int _moveCountDigitValue = 4294967296; // 1 << 32
-  static const int _priorityDigitValue = 1099511627776; // 1 << 40
 
   final PriorityQueue<int> _queueMoveCountAndHash = PriorityQueue();
   final Map<int, StateMemo> _stateMemo = {};
@@ -92,15 +91,6 @@ class SolveBoard {
     return answers;
   }
 
-  void addToQueueMoveCountAndHash(
-      int moveCount, int robotPositionhash, int priority) {
-    if (moveCount < searchFinishedCount) {
-      _queueMoveCountAndHash.add((priority * _priorityDigitValue) +
-          (moveCount * _moveCountDigitValue) +
-          robotPositionhash);
-    }
-  }
-
   void _init() {
     _robotPositions.set(board.robotPositions);
     final startRobotPositionsHash = _robotPositions.toHash();
@@ -110,13 +100,9 @@ class SolveBoard {
     _makeShortestGoalMemo();
 
     _robotPositions.set(board.robotPositions);
-    _stateMemo[startRobotPositionsHash] = StateMemo(
-      robotPositionsHash: startRobotPositionsHash,
-      moveCount: 0,
-      lastRobotPositionsHash: null,
-      lastMove: null,
-    );
-    addToQueueMoveCountAndHash(0, startRobotPositionsHash, 0);
+    _addStateMemo(_robotPositions, startRobotPositionsHash, 0, null, null);
+
+    _addToQueueMoveCountAndHash(0, startRobotPositionsHash, 0);
   }
 
   void _makeMovedNext(int originalHash) {
@@ -206,16 +192,22 @@ class SolveBoard {
     }
   }
 
-  void _solve() {
-    while (_queueMoveCountAndHash.isNotEmpty) {
-      final value = _queueMoveCountAndHash.removeFirst();
-      final moveCount = (value ~/ _moveCountDigitValue) % 256;
-      final hash = value % _moveCountDigitValue;
-      _solveInner(moveCount, hash);
+  void _addToQueueMoveCountAndHash(
+      int moveCount, int robotPositionhash, int priority) {
+    if (moveCount < searchFinishedCount) {
+      _queueMoveCountAndHash
+          .add((priority * _moveCountDigitValue) + robotPositionhash);
     }
   }
 
-  void _solveInner(int currentMoveCount, int currentHash) {
+  void _solve() {
+    while (_queueMoveCountAndHash.isNotEmpty) {
+      final hash = _queueMoveCountAndHash.removeFirst() % _moveCountDigitValue;
+      _solveInner(hash);
+    }
+  }
+
+  void _solveInner(int currentHash) {
     // assert(_stateMemo.containsKey(currentHash));
 
     ++searchStateNum;
@@ -231,21 +223,16 @@ class SolveBoard {
 
         // Already searched
         final nextHash = _robotPositions.toHash();
+        final currentMoveCount = _stateMemo[currentHash]!.moveCount;
         final nextMoveCount = currentMoveCount + 1;
-        final nextStateMemo = _stateMemo[nextHash];
-        if (nextStateMemo != null) {
-          if (nextStateMemo.moveCount <= nextMoveCount) {
-            continue;
-          }
+        if (_getNextHashStateMemoMoveCount(_robotPositions, nextHash) <=
+            nextMoveCount) {
+          continue;
         }
 
         // add memo
-        _stateMemo[nextHash] = StateMemo(
-          robotPositionsHash: nextHash,
-          moveCount: nextMoveCount,
-          lastRobotPositionsHash: currentHash,
-          lastMove: MoveRecord(color: robotColor, direction: direction),
-        );
+        _addStateMemo(_robotPositions, nextHash, nextMoveCount, currentHash,
+            MoveRecord(color: robotColor, direction: direction));
 
         // IsGoal
         if (board.isGoal(
@@ -265,10 +252,36 @@ class SolveBoard {
 
         // add nextSearch
         final estimatedShortestMoveCount = nextMoveCount + _findShortestCount();
-        addToQueueMoveCountAndHash(
+        _addToQueueMoveCountAndHash(
             nextMoveCount, nextHash, estimatedShortestMoveCount);
       }
     }
+  }
+
+  int _getNextHashStateMemoMoveCount(
+      RobotPositionsMutable robotPosition, int nextHash) {
+    final nextStateMemo = _stateMemo[nextHash];
+    // slow
+    // _stateMemo[robotPosition.toOrderedhash(board.goal.color)];
+    return nextStateMemo != null ? nextStateMemo.moveCount : 1 << 30;
+  }
+
+  void _addStateMemo(RobotPositionsMutable robotPosition, int nextHash,
+      int nextMoveCount, int? currentHash, MoveRecord? lastMoveRecord) {
+    _stateMemo[nextHash] = StateMemo(
+      robotPositionsHash: nextHash,
+      moveCount: nextMoveCount,
+      lastRobotPositionsHash: currentHash,
+      lastMove: lastMoveRecord,
+    );
+    // slow
+    /*final orderedNextHash = robotPosition.toOrderedhash(board.goal.color);
+    _stateMemo[orderedNextHash] = StateMemo(
+      robotPositionsHash: orderedNextHash,
+      moveCount: nextMoveCount,
+      lastRobotPositionsHash: null,
+      lastMove: null,
+    );*/
   }
 
   bool _isDifferentHistory(MoveHistory newHistory) {

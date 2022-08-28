@@ -61,6 +61,28 @@ class RobotPositionsMutable {
     return hash;
   }
 
+  int toOrderedhash(RobotColors? fixedColor) {
+    final List<int> hashList = [];
+    for (final color in RobotColors.values) {
+      if (color != fixedColor) {
+        hashList
+            .add((positions[color.index].x << 4) + positions[color.index].y);
+      }
+    }
+    hashList.sort();
+    int hash = 0;
+    int index = 0;
+    for (final color in RobotColors.values) {
+      if (color == fixedColor) {
+        hash = (hash << 4) + positions[color.index].x;
+        hash = (hash << 4) + positions[color.index].y;
+      } else {
+        hash = (hash << 8) + hashList[index++];
+      }
+    }
+    return hash;
+  }
+
   void fromHash(int hash) {
     positions[RobotColors.red.index] = Position(
       x: (hash >> 28) % 16,
