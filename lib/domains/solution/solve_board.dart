@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:math';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:ricochet_robots/domains/board/board.dart';
 import 'package:ricochet_robots/domains/board/move_history.dart';
@@ -45,8 +46,10 @@ class SolveBoard {
   final List<MoveHistory> answers = [];
 
   static const int _searchMaxCount = 30;
-  final List<Queue<int>> queueList =
-      List.generate(_searchMaxCount, (index) => Queue());
+  static const int _moveCountDigitValue = 4294967296; // 1 << 32
+  static const int _priorityDigitValue = 1099511627776; // 1 << 40
+
+  final PriorityQueue<int> _queueMoveCountAndHash = PriorityQueue();
   final Map<int, StateMemo> _stateMemo = {};
   final RobotPositionsMutable _robotPositions = RobotPositionsMutable.init;
   final List<List<List<Position>>> _movedNext = List.generate(
@@ -89,6 +92,15 @@ class SolveBoard {
     return answers;
   }
 
+  void addToQueueMoveCountAndHash(
+      int moveCount, int robotPositionhash, int priority) {
+    if (moveCount < searchFinishedCount) {
+      _queueMoveCountAndHash.add((priority * _priorityDigitValue) +
+          (moveCount * _moveCountDigitValue) +
+          robotPositionhash);
+    }
+  }
+
   void _init() {
     _robotPositions.set(board.robotPositions);
     final startRobotPositionsHash = _robotPositions.toHash();
@@ -104,7 +116,7 @@ class SolveBoard {
       lastRobotPositionsHash: null,
       lastMove: null,
     );
-    queueList[0].addLast(startRobotPositionsHash);
+    addToQueueMoveCountAndHash(0, startRobotPositionsHash, 0);
   }
 
   void _makeMovedNext(int originalHash) {
@@ -195,16 +207,18 @@ class SolveBoard {
   }
 
   void _solve() {
-    for (var index = 0; index < searchFinishedCount; ++index) {
-      final queue = queueList[index];
-      while (queue.isNotEmpty) {
-        _solveInner(queue.removeFirst());
-      }
+    while (_queueMoveCountAndHash.isNotEmpty) {
+      final value = _queueMoveCountAndHash.removeFirst();
+      final moveCount = (value ~/ _moveCountDigitValue) % 256;
+      final hash = value % _moveCountDigitValue;
+      _solveInner(moveCount, hash);
     }
   }
 
-  void _solveInner(int currentHash) {
+  void _solveInner(int currentMoveCount, int currentHash) {
     // assert(_stateMemo.containsKey(currentHash));
+
+    ++searchStateNum;
 
     for (final robotColor in RobotColors.values) {
       for (final direction in Directions.values) {
@@ -217,7 +231,7 @@ class SolveBoard {
 
         // Already searched
         final nextHash = _robotPositions.toHash();
-        final nextMoveCount = _stateMemo[currentHash]!.moveCount + 1;
+        final nextMoveCount = currentMoveCount + 1;
         final nextStateMemo = _stateMemo[nextHash];
         if (nextStateMemo != null) {
           if (nextStateMemo.moveCount <= nextMoveCount) {
@@ -242,9 +256,7 @@ class SolveBoard {
           if (_isDifferentHistory(newHistory)) {
             answers.add(newHistory);
             if (isFinishedIfFound) {
-              for (final queue in queueList) {
-                queue.clear();
-              }
+              _queueMoveCountAndHash.clear();
               return;
             }
           }
@@ -253,11 +265,8 @@ class SolveBoard {
 
         // add nextSearch
         final estimatedShortestMoveCount = nextMoveCount + _findShortestCount();
-        if (estimatedShortestMoveCount > queueList.length) {
-          continue;
-        }
-        queueList[estimatedShortestMoveCount].addLast(nextHash);
-        ++searchStateNum;
+        addToQueueMoveCountAndHash(
+            nextMoveCount, nextHash, estimatedShortestMoveCount);
       }
     }
   }
