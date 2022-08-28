@@ -127,11 +127,19 @@ class HeaderWidget extends StatelessWidget {
           value: state.searchCount,
           onChanged: (int? value) =>
               bloc.add(SetSearchCountEvent(searchCount: value ?? -1)),
-          items: List.generate(30 + 1, (index) => index)
-              .map<DropdownMenuItem<int>>((int value) {
+          items: List.generate(30 + 1 + 1, (index) {
+            if (index == 0) {
+              return -1;
+            } else if (index > 30) {
+              return -index + (30 - 1);
+            }
+            return index;
+          }).map<DropdownMenuItem<int>>((int value) {
             return DropdownMenuItem<int>(
-              value: value == 0 ? -1 : value,
-              child: Text(value == 0 ? 'First' : value.toString()),
+              value: value,
+              child: Text(value == -1
+                  ? 'First'
+                  : (value == -2 ? 'First Fast' : value.toString())),
             );
           }).toList(),
         ),

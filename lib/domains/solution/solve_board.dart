@@ -28,13 +28,15 @@ class ShortestGoalMemo {
   final Position current;
   int shortestCount = 1 << 30;
   final Set<Position> needRobot = {}; // or, empty => not need
+  int otherRobotWallPriority = 1 << 30;
 
   ShortestGoalMemo({
     required this.current,
   });
 
   @override
-  String toString() => "$current $shortestCount $needRobot";
+  String toString() =>
+      "$current $shortestCount $needRobot $otherRobotWallPriority";
 }
 
 class SolveBoard {
@@ -42,6 +44,7 @@ class SolveBoard {
 
   final int searchFinishedCount;
   final bool isFinishedIfFound;
+  final int searchOption;
 
   final List<MoveHistory> answers = [];
 
@@ -80,7 +83,8 @@ class SolveBoard {
   })  : searchFinishedCount = searchFinishedCount < 0
             ? _searchMaxCount
             : min(searchFinishedCount, _searchMaxCount),
-        isFinishedIfFound = searchFinishedCount < 0;
+        isFinishedIfFound = searchFinishedCount < 0,
+        searchOption = searchFinishedCount == -2 ? 1 : 0;
 
   List<MoveHistory> solve() {
     stopwatch.start();
@@ -169,18 +173,17 @@ class SolveBoard {
         while (board.grids.grids[current.y][current.x].canMove(direction)) {
           current = current.next(direction);
           final nextMemo = _shortestGoalMemo[current.x][current.y];
-          if (nextMemo.shortestCount >= memo.shortestCount + 1) {
-            if (!(nextMemo.shortestCount == memo.shortestCount + 1 &&
-                nextMemo.needRobot.isEmpty)) {
-              if (need == null) {
-                if (memo.needRobot.isEmpty) {
-                  nextMemo.needRobot.clear();
-                } else {
-                  nextMemo.needRobot.addAll(memo.needRobot);
-                }
+          if (nextMemo.shortestCount > memo.shortestCount + 1 ||
+              (nextMemo.shortestCount == memo.shortestCount + 1 &&
+                  nextMemo.needRobot.isNotEmpty)) {
+            if (need == null) {
+              if (memo.needRobot.isEmpty) {
+                nextMemo.needRobot.clear();
               } else {
-                nextMemo.needRobot.add(need); // or memo.needRobot
+                nextMemo.needRobot.addAll(memo.needRobot);
               }
+            } else {
+              nextMemo.needRobot.add(need); // or memo.needRobot
             }
           }
           if (nextMemo.shortestCount > memo.shortestCount + 1) {
@@ -190,11 +193,37 @@ class SolveBoard {
         }
       }
     }
+
+    for (var x = 0; x < 16; ++x) {
+      for (var y = 0; y < 16; ++y) {
+        final memo = _shortestGoalMemo[x][y];
+        if (memo.needRobot.isEmpty) {
+          memo.otherRobotWallPriority = 0;
+          queue.add(memo.current);
+        }
+      }
+    }
+    while (queue.isNotEmpty) {
+      final firstPosition = queue.removeFirst();
+      final memo = _shortestGoalMemo[firstPosition.x][firstPosition.y];
+      for (final direction in Directions.values) {
+        if (!board.grids.grids[memo.current.y][memo.current.x]
+            .canMove(direction)) {
+          continue;
+        }
+        final nextPosition = firstPosition.next(direction);
+        final nextMemo = _shortestGoalMemo[nextPosition.x][nextPosition.y];
+        if (nextMemo.otherRobotWallPriority > memo.otherRobotWallPriority + 1) {
+          nextMemo.otherRobotWallPriority = memo.otherRobotWallPriority + 1;
+          queue.add(nextPosition);
+        }
+      }
+    }
   }
 
   void _addToQueueMoveCountAndHash(
       int moveCount, int robotPositionhash, int priority) {
-    if (moveCount < searchFinishedCount) {
+    if (moveCount <= searchFinishedCount) {
       _queueMoveCountAndHash
           .add((priority * _moveCountDigitValue) + robotPositionhash);
     }
@@ -251,18 +280,33 @@ class SolveBoard {
         }
 
         // add nextSearch
-        final estimatedShortestMoveCount = nextMoveCount + _findShortestCount();
+        final estimatedShortestMoveCount = nextMoveCount +
+            _findShortestCount(searchFinishedCount - nextMoveCount);
+        final priority = estimatedShortestMoveCount +
+            (((searchOption & 1) == 1) ? _calcPriority(_robotPositions) : 0);
         _addToQueueMoveCountAndHash(
-            nextMoveCount, nextHash, estimatedShortestMoveCount);
+            estimatedShortestMoveCount, nextHash, priority);
       }
     }
+  }
+
+  int _calcPriority(RobotPositionsMutable robotPosition) {
+    int otherRobotPoint = 10;
+    for (final color in RobotColors.values) {
+      if (color != board.goal.color) {
+        final position = robotPosition.positions[color.index];
+        final memo = _shortestGoalMemo[position.x][position.y];
+        if (memo.otherRobotWallPriority > 0) {
+          otherRobotPoint = min(otherRobotPoint, memo.otherRobotWallPriority);
+        }
+      }
+    }
+    return otherRobotPoint;
   }
 
   int _getNextHashStateMemoMoveCount(
       RobotPositionsMutable robotPosition, int nextHash) {
     final nextStateMemo = _stateMemo[nextHash];
-    // slow
-    // _stateMemo[robotPosition.toOrderedhash(board.goal.color)];
     return nextStateMemo != null ? nextStateMemo.moveCount : 1 << 30;
   }
 
@@ -274,14 +318,6 @@ class SolveBoard {
       lastRobotPositionsHash: currentHash,
       lastMove: lastMoveRecord,
     );
-    // slow
-    /*final orderedNextHash = robotPosition.toOrderedhash(board.goal.color);
-    _stateMemo[orderedNextHash] = StateMemo(
-      robotPositionsHash: orderedNextHash,
-      moveCount: nextMoveCount,
-      lastRobotPositionsHash: null,
-      lastMove: null,
-    );*/
   }
 
   bool _isDifferentHistory(MoveHistory newHistory) {
@@ -305,20 +341,23 @@ class SolveBoard {
     return MoveHistory(records: moveRecords.reversed.toList());
   }
 
-  int _findShortestCount() {
+  int _findShortestCount(int leftMoveCount) {
     int _count(RobotColors color) {
       final position = _robotPositions.positions[color.index];
       final memo = _shortestGoalMemo[position.x][position.y];
-      var alreadyWall = memo.needRobot.isEmpty;
-      if (!alreadyWall) {
-        for (final robotPosition in _robotPositions.positions) {
-          if (memo.needRobot.contains(robotPosition)) {
-            alreadyWall = true;
-            break;
+      var alreadyWall = true;
+      if (isFinishedIfFound || memo.shortestCount == leftMoveCount) {
+        if (memo.needRobot.isNotEmpty) {
+          alreadyWall = false;
+          for (final robotPosition in _robotPositions.positions) {
+            if (memo.needRobot.contains(robotPosition)) {
+              alreadyWall = true;
+              break;
+            }
           }
         }
       }
-      return memo.shortestCount - 1 + (alreadyWall ? 0 : 1);
+      return memo.shortestCount + (alreadyWall ? 0 : 1);
     }
 
     final goalColor = board.goal.color;
