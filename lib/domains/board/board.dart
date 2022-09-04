@@ -188,4 +188,83 @@ class Board with _$Board {
   Board get robotShuffled {
     return copyWith(robotPositions: RobotPositions.random(grids: grids));
   }
+
+  List<List<List<Position>>> get makeMovedNext {
+    final List<List<List<Position>>> moveNext = List.generate(
+      16,
+      (x) => List.generate(
+        16,
+        (y) => List.generate(
+          Directions.values.length,
+          (direction) => Position(x: x, y: y),
+        ),
+      ),
+    );
+
+    for (var x = 0; x < 16; ++x) {
+      for (var y = 0; y < 16; ++y) {
+        for (final direction in Directions.values) {
+          final board = copyWith(
+            robotPositions: robotPositions.copyWith(
+              red: Position(x: x, y: y),
+              blue: const Position(x: 16, y: 16),
+              green: const Position(x: 16, y: 16),
+              yellow: const Position(x: 16, y: 16),
+            ),
+          );
+          final nextBoard = board.movedLight(
+            robot: const Robot(color: RobotColors.red),
+            direction: direction,
+          );
+          moveNext[x][y][direction.index] =
+              nextBoard.robotPositions.red.copyWith();
+        }
+      }
+    }
+    return moveNext;
+  }
+
+  String get toBoardText {
+    final List<int> output = [];
+    for (var x = 0; x < 16; ++x) {
+      for (var y = 0; y < 16; ++y) {
+        final goalGrid = getGoalGridIfExists(Position(x: x, y: y));
+        final robot =
+            Robot(color: goal.color == null ? RobotColors.red : goal.color!);
+        if (goalGrid != null && goalGrid.isGoal(goal, robot)) {
+          output.add(x);
+          output.add(y);
+          break;
+        }
+      }
+    }
+
+    var goalColor = 0;
+    goalColor = (goalColor << 1) + (goal.color == RobotColors.yellow ? 1 : 0);
+    goalColor = (goalColor << 1) + (goal.color == RobotColors.green ? 1 : 0);
+    goalColor = (goalColor << 1) + (goal.color == RobotColors.blue ? 1 : 0);
+    goalColor = (goalColor << 1) + (goal.color == RobotColors.red ? 1 : 0);
+    output.add(goalColor);
+
+    output.add(robotPositions.red.x);
+    output.add(robotPositions.red.y);
+    output.add(robotPositions.blue.x);
+    output.add(robotPositions.blue.y);
+    output.add(robotPositions.green.x);
+    output.add(robotPositions.green.y);
+    output.add(robotPositions.yellow.x);
+    output.add(robotPositions.yellow.y);
+
+    final moveNext = makeMovedNext;
+    for (var x = 0; x < 16; ++x) {
+      for (var y = 0; y < 16; ++y) {
+        for (final direction in Directions.values) {
+          output.add(moveNext[x][y][direction.index].x);
+          output.add(moveNext[x][y][direction.index].y);
+        }
+      }
+    }
+
+    return output.map((c) => c.toRadixString(16)).join();
+  }
 }

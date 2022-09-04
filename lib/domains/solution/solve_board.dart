@@ -54,16 +54,7 @@ class SolveBoard {
   final PriorityQueue<int> _queueMoveCountAndHash = PriorityQueue();
   final Map<int, StateMemo> _stateMemo = {};
   final RobotPositionsMutable _robotPositions = RobotPositionsMutable.init;
-  final List<List<List<Position>>> _movedNext = List.generate(
-    16,
-    (x) => List.generate(
-      16,
-      (y) => List.generate(
-        Directions.values.length,
-        (direction) => Position(x: x, y: y),
-      ),
-    ),
-  );
+  final List<List<List<Position>>> _movedNext;
   final List<List<ShortestGoalMemo>> _shortestGoalMemo = List.generate(
     16,
     (x) => List.generate(
@@ -84,7 +75,8 @@ class SolveBoard {
             ? _searchMaxCount
             : min(searchFinishedCount, _searchMaxCount),
         isFinishedIfFound = searchFinishedCount < 0,
-        searchOption = searchFinishedCount == -2 ? 1 : 0;
+        searchOption = searchFinishedCount == -2 ? 1 : 0,
+        _movedNext = board.makeMovedNext;
 
   List<MoveHistory> solve() {
     stopwatch.start();
@@ -96,50 +88,14 @@ class SolveBoard {
   }
 
   void _init() {
-    _robotPositions.set(board.robotPositions);
-    final startRobotPositionsHash = _robotPositions.toHash();
-
-    _makeMovedNext(startRobotPositionsHash);
-
     _makeShortestGoalMemo();
 
     _robotPositions.set(board.robotPositions);
+    final startRobotPositionsHash = _robotPositions.toHash();
+
     _addStateMemo(_robotPositions, startRobotPositionsHash, 0, null, null);
 
     _addToQueueMoveCountAndHash(0, startRobotPositionsHash, 0);
-  }
-
-  void _makeMovedNext(int originalHash) {
-    board = board.copyWith(
-      robotPositions: const RobotPositions(
-        red: Position(x: 0, y: 0),
-        blue: Position(x: 16, y: 16),
-        green: Position(x: 16, y: 16),
-        yellow: Position(x: 16, y: 16),
-      ),
-    );
-
-    for (var x = 0; x < 16; ++x) {
-      for (var y = 0; y < 16; ++y) {
-        for (final direction in Directions.values) {
-          board = board.copyWith(
-            robotPositions: board.robotPositions.copyWith(
-              red: Position(x: x, y: y),
-            ),
-          );
-          board = board.movedLight(
-            robot: const Robot(color: RobotColors.red),
-            direction: direction,
-          );
-          _movedNext[x][y][direction.index] =
-              board.robotPositions.red.copyWith();
-        }
-      }
-    }
-
-    board = board.copyWith(
-      robotPositions: RobotPositions.fromHash(originalHash),
-    );
   }
 
   void _makeShortestGoalMemo() {

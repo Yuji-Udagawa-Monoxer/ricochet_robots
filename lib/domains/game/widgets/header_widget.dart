@@ -107,8 +107,10 @@ class HeaderWidget extends StatelessWidget {
           }).toList(),
         ),
         IconButton(
-          onPressed: () => debugPrint(
-              RobotPositions.toHash(board.robotPositions).toString()),
+          onPressed: () {
+            debugPrint(RobotPositions.toHash(board.robotPositions).toString());
+            debugPrint(board.toBoardText);
+          },
           icon: const Icon(
             Icons.plagiarism,
             color: Colors.grey,
