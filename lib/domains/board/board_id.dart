@@ -123,7 +123,9 @@ String toNormalGoalPositionId({
       }
       return null;
     });
-  }).expand((list) => list).whereType<Position>().first;
+  }).expand((list) => list).whereType<Position>().firstWhere(
+      ((element) => true),
+      orElse: () => const Position(x: 0, y: 0));
   return positionToId(position: position);
 }
 
