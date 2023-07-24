@@ -71,4 +71,7 @@ class Position with _$Position {
         return to.y == y && to.x - x < 0;
     }
   }
+
+  static const invalid = Position(x: 16, y: 16);
+  bool get isInvalid => x < 0 || 16 <= x || y < 0 || 16 <= y;
 }

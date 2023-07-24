@@ -4,10 +4,10 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:ricochet_robots/domains/board/board.dart';
+import 'package:ricochet_robots/domains/board/grid.dart';
 import 'package:ricochet_robots/domains/board/move_history.dart';
 import 'package:ricochet_robots/domains/board/position.dart';
 import 'package:ricochet_robots/domains/board/robot.dart';
-import 'package:ricochet_robots/domains/board/robot_positions.dart';
 import 'package:ricochet_robots/domains/board/robot_positions_mutable.dart';
 
 class StateMemo {
@@ -24,19 +24,24 @@ class StateMemo {
   });
 }
 
+enum _RobotGoalType {
+  none,
+  normal,
+  wild,
+}
+
 class ShortestGoalMemo {
+  final RobotColors color;
   final Position current;
   int shortestCount = 1 << 30;
-  final Set<Position> needRobot = {}; // or, empty => not need
-  int otherRobotWallPriority = 1 << 30;
 
   ShortestGoalMemo({
+    required this.color,
     required this.current,
   });
 
   @override
-  String toString() =>
-      "$current $shortestCount $needRobot $otherRobotWallPriority";
+  String toString() => "$color $current $shortestCount";
 }
 
 class SolveBoard {
@@ -44,7 +49,6 @@ class SolveBoard {
 
   final int searchFinishedCount;
   final bool isFinishedIfFound;
-  final int searchOption;
 
   final List<MoveHistory> answers = [];
 
@@ -55,12 +59,18 @@ class SolveBoard {
   final Map<int, StateMemo> _stateMemo = {};
   final RobotPositionsMutable _robotPositions = RobotPositionsMutable.init;
   final List<List<List<Position>>> _movedNext;
-  final List<List<ShortestGoalMemo>> _shortestGoalMemo = List.generate(
-    16,
-    (x) => List.generate(
+  final List<_RobotGoalType> _robotGoalType =
+      List.generate(RobotColors.values.length, (index) => _RobotGoalType.none);
+  final List<List<List<ShortestGoalMemo>>> _shortestGoalMemo = List.generate(
+    RobotColors.values.length,
+    (colorIndex) => List.generate(
       16,
-      (y) => ShortestGoalMemo(
-        current: Position(x: x, y: y),
+      (x) => List.generate(
+        16,
+        (y) => ShortestGoalMemo(
+          color: RobotColors.values[colorIndex],
+          current: Position(x: x, y: y),
+        ),
       ),
     ),
   );
@@ -75,7 +85,6 @@ class SolveBoard {
             ? _searchMaxCount
             : min(searchFinishedCount, _searchMaxCount),
         isFinishedIfFound = searchFinishedCount < 0,
-        searchOption = searchFinishedCount == -2 ? 1 : 0,
         _movedNext = board.makeMovedNext;
 
   List<MoveHistory> solve() {
@@ -99,80 +108,73 @@ class SolveBoard {
   }
 
   void _makeShortestGoalMemo() {
-    final Queue<Position> queue = Queue();
-    // TODO GOALS
-    final goalColor = board.goals[0].color ?? RobotColors.red;
+    final startPositions = List.generate(
+      RobotColors.values.length,
+      (index) => Position.invalid,
+    );
 
     for (var x = 0; x < 16; ++x) {
       for (var y = 0; y < 16; ++y) {
         final position = Position(x: x, y: y);
-        if (board.isGoalOne(position, Robot(color: goalColor))) {
-          _shortestGoalMemo[x][y].shortestCount = 0;
-          queue.add(position);
+        if (board.grids.at(position: position) is WildGoalGrid) {
+          if (board.isGoalOne(position, const Robot(color: RobotColors.red))) {
+            for (final goalColor in RobotColors.values) {
+              startPositions[goalColor.index] = position;
+              _robotGoalType[goalColor.index] = _RobotGoalType.wild;
+            }
+          }
         }
       }
     }
 
+    for (var x = 0; x < 16; ++x) {
+      for (var y = 0; y < 16; ++y) {
+        final position = Position(x: x, y: y);
+        if (board.grids.at(position: position) is NormalGoalGrid) {
+          for (final goalColor in RobotColors.values) {
+            if (board.isGoalOne(position, Robot(color: goalColor))) {
+              startPositions[goalColor.index] = position;
+              _robotGoalType[goalColor.index] = _RobotGoalType.normal;
+            }
+          }
+        }
+      }
+    }
+
+    for (final goalColor in RobotColors.values) {
+      final position = startPositions[goalColor.index];
+      if (!position.isInvalid) {
+        _makeShortestGoalMemoInner(goalColor, position);
+      }
+    }
+  }
+
+  void _makeShortestGoalMemoInner(
+    RobotColors goalColor,
+    Position startPosition,
+  ) {
+    final Queue<Position> queue = Queue();
+    _shortestGoalMemo[goalColor.index][startPosition.x][startPosition.y]
+        .shortestCount = 0;
+    queue.add(startPosition);
+
     while (queue.isNotEmpty) {
       final firstPosition = queue.removeFirst();
-      final memo = _shortestGoalMemo[firstPosition.x][firstPosition.y];
+      final memo =
+          _shortestGoalMemo[goalColor.index][firstPosition.x][firstPosition.y];
 
       _robotPositions.setOneColor(goalColor, firstPosition);
 
       for (final direction in Directions.values) {
         var current = firstPosition;
-        final reverseDirection = Directions.values[(direction.index + 2) % 4];
-        final Position? need = board
-                .grids.grids[firstPosition.y][firstPosition.x]
-                .canMove(reverseDirection)
-            ? current.next(reverseDirection)
-            : null;
         while (board.grids.grids[current.y][current.x].canMove(direction)) {
           current = current.next(direction);
-          final nextMemo = _shortestGoalMemo[current.x][current.y];
-          if (nextMemo.shortestCount > memo.shortestCount + 1 ||
-              (nextMemo.shortestCount == memo.shortestCount + 1 &&
-                  nextMemo.needRobot.isNotEmpty)) {
-            if (need == null) {
-              if (memo.needRobot.isEmpty) {
-                nextMemo.needRobot.clear();
-              } else {
-                nextMemo.needRobot.addAll(memo.needRobot);
-              }
-            } else {
-              nextMemo.needRobot.add(need); // or memo.needRobot
-            }
-          }
+          final nextMemo =
+              _shortestGoalMemo[goalColor.index][current.x][current.y];
           if (nextMemo.shortestCount > memo.shortestCount + 1) {
             nextMemo.shortestCount = memo.shortestCount + 1;
             queue.add(current);
           }
-        }
-      }
-    }
-
-    for (var x = 0; x < 16; ++x) {
-      for (var y = 0; y < 16; ++y) {
-        final memo = _shortestGoalMemo[x][y];
-        if (memo.needRobot.isEmpty) {
-          memo.otherRobotWallPriority = 0;
-          queue.add(memo.current);
-        }
-      }
-    }
-    while (queue.isNotEmpty) {
-      final firstPosition = queue.removeFirst();
-      final memo = _shortestGoalMemo[firstPosition.x][firstPosition.y];
-      for (final direction in Directions.values) {
-        if (!board.grids.grids[memo.current.y][memo.current.x]
-            .canMove(direction)) {
-          continue;
-        }
-        final nextPosition = firstPosition.next(direction);
-        final nextMemo = _shortestGoalMemo[nextPosition.x][nextPosition.y];
-        if (nextMemo.otherRobotWallPriority > memo.otherRobotWallPriority + 1) {
-          nextMemo.otherRobotWallPriority = memo.otherRobotWallPriority + 1;
-          queue.add(nextPosition);
         }
       }
     }
@@ -223,6 +225,7 @@ class SolveBoard {
         // IsGoals
         if (board.isGoals(_robotPositions.positions)) {
           final newHistory = _makeMoveHistory(nextHash);
+          // debugPrint("candidate: ${newHistory.toString()}");
           if (_isDifferentHistory(newHistory)) {
             answers.add(newHistory);
             if (isFinishedIfFound) {
@@ -236,27 +239,10 @@ class SolveBoard {
         // add nextSearch
         final estimatedShortestMoveCount = nextMoveCount +
             _findShortestCount(searchFinishedCount - nextMoveCount);
-        final priority = estimatedShortestMoveCount +
-            (((searchOption & 1) == 1) ? _calcPriority(_robotPositions) : 0);
         _addToQueueMoveCountAndHash(
-            estimatedShortestMoveCount, nextHash, priority);
+            estimatedShortestMoveCount, nextHash, estimatedShortestMoveCount);
       }
     }
-  }
-
-  int _calcPriority(RobotPositionsMutable robotPosition) {
-    int otherRobotPoint = 10;
-    for (final color in RobotColors.values) {
-      // TODO GOALS
-      if (color != board.goals[0].color) {
-        final position = robotPosition.positions[color.index];
-        final memo = _shortestGoalMemo[position.x][position.y];
-        if (memo.otherRobotWallPriority > 0) {
-          otherRobotPoint = min(otherRobotPoint, memo.otherRobotWallPriority);
-        }
-      }
-    }
-    return otherRobotPoint;
   }
 
   int _getNextHashStateMemoMoveCount(
@@ -299,33 +285,25 @@ class SolveBoard {
   int _findShortestCount(int leftMoveCount) {
     int _count(RobotColors color) {
       final position = _robotPositions.positions[color.index];
-      final memo = _shortestGoalMemo[position.x][position.y];
-      var alreadyWall = true;
-      if (isFinishedIfFound || memo.shortestCount == leftMoveCount) {
-        if (memo.needRobot.isNotEmpty) {
-          alreadyWall = false;
-          for (final robotPosition in _robotPositions.positions) {
-            if (memo.needRobot.contains(robotPosition)) {
-              alreadyWall = true;
-              break;
-            }
-          }
-        }
-      }
-      return memo.shortestCount + (alreadyWall ? 0 : 1);
+      final memo = _shortestGoalMemo[color.index][position.x][position.y];
+      return memo.shortestCount;
     }
 
-    // TODO GOALS
-    final goalColor = board.goals[0].color;
-    int minCount = 1 << 30;
-    if (goalColor == null) {
-      for (final color in RobotColors.values) {
-        minCount = min(minCount, _count(color));
+    int wildCount = 1 << 30;
+    int sumNormalCount = 0;
+    for (final color in RobotColors.values) {
+      switch (_robotGoalType[color.index]) {
+        case _RobotGoalType.none:
+          break;
+        case _RobotGoalType.normal:
+          sumNormalCount += _count(color);
+          break;
+        case _RobotGoalType.wild:
+          wildCount = min(wildCount, _count(color));
+          break;
       }
-    } else {
-      minCount = _count(goalColor);
     }
-    return minCount;
+    return (wildCount == 1 << 30 ? 0 : wildCount) + sumNormalCount;
   }
 
   void _moved({
