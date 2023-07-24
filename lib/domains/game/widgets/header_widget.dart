@@ -32,7 +32,7 @@ class HeaderWidget extends StatelessWidget {
     fontSize: 20,
   );
 
-  Widget _target(Goal goal, BuildContext context) {
+  Widget _target(Goal goal, int index, BuildContext context) {
     final color = goal.color;
     if (color == null) {
       return Text(
@@ -51,13 +51,13 @@ class HeaderWidget extends StatelessWidget {
         iconData: Icons.android_outlined,
         color: Colors.white,
         size: 20,
-        editAction: const EditAction(nextGoalColor: true),
+        editAction: EditAction(nextGoalColor: true, index: index),
         currentMode: currentMode,
       ),
     );
   }
 
-  Widget _goal(Goal goal, BuildContext context) {
+  Widget _goal(Goal goal, int index, BuildContext context) {
     final type = goal.type;
     final color = goal.color;
     if (type == null || color == null) {
@@ -65,7 +65,7 @@ class HeaderWidget extends StatelessWidget {
         iconData: Icons.help,
         color: Colors.deepPurple,
         size: 20,
-        editAction: const EditAction(nextGoalColor: true),
+        editAction: EditAction(nextGoalColor: true, index: index),
         currentMode: currentMode,
       );
     }
@@ -73,8 +73,28 @@ class HeaderWidget extends StatelessWidget {
       iconData: getIcon(type),
       color: getActualColor(color),
       size: 20,
-      editAction: const EditAction(nextGoalType: true),
+      editAction: EditAction(nextGoalType: true, index: index),
       currentMode: currentMode,
+    );
+  }
+
+  Widget _goals(BuildContext context) {
+    final goalsList = board.goals.asMap().entries.map((entry) {
+      final index = entry.key;
+      final goal = entry.value;
+      return Row(children: [
+        Text("Move ", style: _textStyle),
+        _target(goal, index, context),
+        Text(" to ", style: _textStyle),
+        _goal(goal, index, context),
+        index == board.goals.length - 1
+            ? const SizedBox.shrink()
+            : Text(" And ", style: _textStyle),
+      ]);
+    }).toList();
+    return Column(
+      children: goalsList,
+      crossAxisAlignment: CrossAxisAlignment.start,
     );
   }
 
@@ -180,6 +200,13 @@ class HeaderWidget extends StatelessWidget {
             : Row(
                 children: [
                   EditableIcon(
+                    iconData: Icons.add_circle,
+                    color: Colors.grey,
+                    size: 20,
+                    editAction: const EditAction(addGoal: true),
+                    currentMode: currentMode,
+                  ),
+                  EditableIcon(
                     iconData: Icons.rotate_right,
                     color: Colors.grey,
                     size: 20,
@@ -213,14 +240,7 @@ class HeaderWidget extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Row(
-                    children: [
-                      Text("Move ", style: _textStyle),
-                      _target(board.goal, context),
-                      Text(" to ", style: _textStyle),
-                      _goal(board.goal, context),
-                    ],
-                  ),
+                  _goals(context),
                   const Expanded(child: SizedBox.shrink()),
                   Text("${histories.length.toString()} moves",
                       style: _textStyle),

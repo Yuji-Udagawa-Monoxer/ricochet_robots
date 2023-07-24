@@ -2,6 +2,8 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ricochet_robots/domains/board/board.dart';
 import 'package:ricochet_robots/domains/board/position.dart';
 
+import '../board/goal.dart';
+
 part 'edit.freezed.dart';
 
 @freezed
@@ -10,11 +12,13 @@ class EditAction with _$EditAction {
     @Default(false) bool nextGoalColor,
     @Default(false) bool nextGoalType,
     @Default(false) bool rotateRightGrids,
+    @Default(false) bool addGoal,
     Position? position,
     Position? topBorder,
     Position? rightBorder,
     Position? downBorder,
     Position? leftBorder,
+    int? index,
   }) = _EditAction;
 }
 
@@ -25,11 +29,22 @@ class EditFunction {
     Position? prePosition,
   ) {
     var newBoard = board.copyWith();
-    if (action.nextGoalColor) {
-      newBoard = newBoard.copyWith(goal: newBoard.goal.nextColor);
+    final goals = newBoard.goals;
+    if (action.nextGoalColor && action.index != null) {
+      newBoard = newBoard.copyWith(
+        goals: List.generate(
+          goals.length,
+          (i) => i == action.index ? goals[i].nextColor : goals[i],
+        ),
+      );
     }
-    if (action.nextGoalType) {
-      newBoard = newBoard.copyWith(goal: newBoard.goal.nextType);
+    if (action.nextGoalType && action.index != null) {
+      newBoard = newBoard.copyWith(
+        goals: List.generate(
+          goals.length,
+          (i) => i == action.index ? goals[i].nextType : goals[i],
+        ),
+      );
     }
     if (prePosition != null && action.position != null) {
       newBoard = newBoard.copyWith(
@@ -42,6 +57,16 @@ class EditFunction {
       newBoard = newBoard.copyWith(
         grids: newBoard.grids.rotateRight,
         robotPositions: newBoard.robotPositions.rotateRight,
+      );
+    }
+    if (action.addGoal) {
+      newBoard = newBoard.copyWith(
+        goals: List.generate(
+          newBoard.goals.length + 1,
+          (index) => index < newBoard.goals.length
+              ? newBoard.goals[index]
+              : const Goal(),
+        ),
       );
     }
     if (action.topBorder != null) {

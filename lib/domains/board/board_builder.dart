@@ -15,7 +15,7 @@ import 'grids.dart';
 Board toBoard({required BoardId boardId}) => Board(
       grids: toGrids(boardId: boardId),
       robotPositions: toRobotPositions(boardId: boardId),
-      goal: toGoal(boardId: boardId),
+      goals: toGoals(boardId: boardId),
     );
 
 @visibleForTesting
@@ -195,18 +195,29 @@ RobotPositions toRobotPositions({required BoardId boardId}) {
   );
 }
 
-Goal toGoal({required BoardId boardId}) {
-  final goalIndex = int.tryParse(boardId.goalId[0]);
-  final colorIndex = int.tryParse(boardId.goalId[1]);
+List<Goal> toGoals({required BoardId boardId}) {
+  final goalIds = List.generate(
+    boardId.goalId.length ~/ 2,
+    (index) => boardId.goalId.substring(index * 2, (index + 1) * 2),
+  );
+  return goalIds.map((goalId) => _toGoal(goalId)).whereType<Goal>().toList();
+}
+
+Goal? _toGoal(String goalId) {
+  final goalIndex = int.tryParse(goalId[0]);
+  final colorIndex = int.tryParse(goalId[1]);
+  if (goalIndex == 4 && colorIndex == 4) {
+    return const Goal();
+  }
   if (goalIndex == null ||
       goalIndex < 0 ||
       GoalTypes.values.length <= goalIndex) {
-    return const Goal();
+    return null;
   }
   if (colorIndex == null ||
       colorIndex < 0 ||
       RobotColors.values.length <= colorIndex) {
-    return const Goal();
+    return null;
   }
   return Goal(
     type: GoalTypes.values[goalIndex],

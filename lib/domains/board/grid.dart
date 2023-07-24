@@ -229,8 +229,7 @@ class WildGoalGrid extends GoalGrid {
         );
 
   @override
-  bool isGoal(Goal goal, Robot robot) =>
-      goal.color == null && goal.type == null;
+  bool isGoal(Goal goal, Robot robot) => goal.isWild;
 
   @override
   WildGoalGrid get rotateRight => WildGoalGrid(

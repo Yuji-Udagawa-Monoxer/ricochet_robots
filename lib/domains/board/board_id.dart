@@ -45,7 +45,8 @@ class BoardId {
   static const _robotIdStart = _wildGoalIdStart + _wildGoalIdLength;
   static const _robotIdLength = 4 * 2;
   static const _goalIdStart = _robotIdStart + _robotIdLength;
-  static const _goalIdLength = 2;
+  static const _goalIdLengthOldVersion = 2;
+  static const _goalIdLength = 8;
   static const _idLength = _baseIdLength +
       _normalGoalIdLength +
       _wildGoalIdLength +
@@ -58,7 +59,8 @@ class BoardId {
       return null;
     }
     final id = to16based(from: encoded);
-    if (id.length != _idLength) {
+    if (!(_idLength - (_goalIdLength - _goalIdLengthOldVersion) <= id.length &&
+        id.length <= _idLength)) {
       return null;
     }
     return BoardId(
@@ -68,7 +70,7 @@ class BoardId {
       wildGoalId:
           id.substring(_wildGoalIdStart, _wildGoalIdStart + _wildGoalIdLength),
       robotId: id.substring(_robotIdStart, _robotIdStart + _robotIdLength),
-      goalId: id.substring(_goalIdStart, _goalIdStart + _goalIdLength),
+      goalId: id.substring(_goalIdStart).padRight(8, '9').substring(0, 8),
     );
   }
 }
@@ -153,10 +155,16 @@ String toRobotId({required Board board}) {
 }
 
 String toGoalId({required Board board}) {
-  final goalType = board.goal.type;
-  final goalColor = board.goal.color;
-  if (goalType == null || goalColor == null) {
+  return board.goals.map((goal) => _toGoalId(goal)).join().padRight(8, '9');
+}
+
+String _toGoalId(Goal goal) {
+  final goalType = goal.type;
+  final goalColor = goal.color;
+  if (goalType == null && goalColor == null) {
     return '44';
+  } else if (goalType == null || goalColor == null) {
+    return '00';
   }
   return GoalTypes.values.indexOf(goalType).toString() +
       RobotColors.values.indexOf(goalColor).toString();

@@ -18,7 +18,7 @@ part 'board.freezed.dart';
 class Board with _$Board {
   const factory Board({
     required Grids grids,
-    required Goal goal,
+    required List<Goal> goals,
     required RobotPositions robotPositions,
   }) = _Board;
 
@@ -26,12 +26,12 @@ class Board with _$Board {
 
   static Board init({
     required Grids grids,
-    Goal? goal,
+    required List<Goal> goals,
     RobotPositions? robotPositions,
   }) {
     return Board(
       grids: grids,
-      goal: goal ?? Goal.random,
+      goals: goals.isEmpty ? [Goal.random] : goals,
       robotPositions: robotPositions ?? RobotPositions.random(grids: grids),
     );
   }
@@ -89,6 +89,7 @@ class Board with _$Board {
 
     return init(
       grids: newGrids,
+      goals: [],
     );
   }
 
@@ -157,7 +158,19 @@ class Board with _$Board {
     );
   }
 
-  bool isGoal(Position position, Robot robot) {
+  bool isGoals(List<Position> positions) {
+    return goals.every(
+      (goal) => RobotColors.values.any(
+        (color) => _isGoal(goal, positions[color.index], Robot(color: color)),
+      ),
+    );
+  }
+
+  bool isGoalOne(Position position, Robot robot) {
+    return goals.any((goal) => _isGoal(goal, position, robot));
+  }
+
+  bool _isGoal(Goal goal, Position position, Robot robot) {
     return grids.at(position: position).isGoal(goal, robot);
   }
 
@@ -182,7 +195,7 @@ class Board with _$Board {
       robotPositions.getRobotIfExists(position: position);
 
   Board get goalShuffled {
-    return copyWith(goal: Goal.random);
+    return copyWith(goals: [Goal.random]);
   }
 
   Board get robotShuffled {
@@ -226,25 +239,35 @@ class Board with _$Board {
 
   String get toBoardText {
     final List<int> output = [];
-    for (var x = 0; x < 16; ++x) {
-      for (var y = 0; y < 16; ++y) {
-        final goalGrid = getGoalGridIfExists(Position(x: x, y: y));
-        final robot =
-            Robot(color: goal.color == null ? RobotColors.red : goal.color!);
-        if (goalGrid != null && goalGrid.isGoal(goal, robot)) {
-          output.add(x);
-          output.add(y);
-          break;
+
+    for (final goal in goals) {
+      for (var x = 0; x < 16; ++x) {
+        for (var y = 0; y < 16; ++y) {
+          final goalGrid = getGoalGridIfExists(Position(x: x, y: y));
+          final robot =
+              Robot(color: goal.color == null ? RobotColors.red : goal.color!);
+          if (goalGrid != null && goalGrid.isGoal(goal, robot)) {
+            output.add(x);
+            output.add(y);
+
+            int colorHex(color) {
+              return (goal.color == color || goal.color == null) ? 1 : 0;
+            }
+
+            var goalColor = 0;
+            goalColor = (goalColor << 1) + colorHex(RobotColors.yellow);
+            goalColor = (goalColor << 1) + colorHex(RobotColors.green);
+            goalColor = (goalColor << 1) + colorHex(RobotColors.blue);
+            goalColor = (goalColor << 1) + colorHex(RobotColors.red);
+            output.add(goalColor);
+            break;
+          }
         }
       }
     }
-
-    var goalColor = 0;
-    goalColor = (goalColor << 1) + (goal.color == RobotColors.yellow ? 1 : 0);
-    goalColor = (goalColor << 1) + (goal.color == RobotColors.green ? 1 : 0);
-    goalColor = (goalColor << 1) + (goal.color == RobotColors.blue ? 1 : 0);
-    goalColor = (goalColor << 1) + (goal.color == RobotColors.red ? 1 : 0);
-    output.add(goalColor);
+    while (output.length < 12) {
+      output.add(0);
+    }
 
     output.add(robotPositions.red.x);
     output.add(robotPositions.red.y);

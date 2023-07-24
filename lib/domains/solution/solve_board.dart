@@ -100,12 +100,13 @@ class SolveBoard {
 
   void _makeShortestGoalMemo() {
     final Queue<Position> queue = Queue();
-    final goalColor = board.goal.color ?? RobotColors.red;
+    // TODO GOALS
+    final goalColor = board.goals[0].color ?? RobotColors.red;
 
     for (var x = 0; x < 16; ++x) {
       for (var y = 0; y < 16; ++y) {
         final position = Position(x: x, y: y);
-        if (board.isGoal(position, Robot(color: goalColor))) {
+        if (board.isGoalOne(position, Robot(color: goalColor))) {
           _shortestGoalMemo[x][y].shortestCount = 0;
           queue.add(position);
         }
@@ -219,11 +220,8 @@ class SolveBoard {
         _addStateMemo(_robotPositions, nextHash, nextMoveCount, currentHash,
             MoveRecord(color: robotColor, direction: direction));
 
-        // IsGoal
-        if (board.isGoal(
-          _robotPositions.positions[robotColor.index],
-          Robot(color: robotColor),
-        )) {
+        // IsGoals
+        if (board.isGoals(_robotPositions.positions)) {
           final newHistory = _makeMoveHistory(nextHash);
           if (_isDifferentHistory(newHistory)) {
             answers.add(newHistory);
@@ -249,7 +247,8 @@ class SolveBoard {
   int _calcPriority(RobotPositionsMutable robotPosition) {
     int otherRobotPoint = 10;
     for (final color in RobotColors.values) {
-      if (color != board.goal.color) {
+      // TODO GOALS
+      if (color != board.goals[0].color) {
         final position = robotPosition.positions[color.index];
         final memo = _shortestGoalMemo[position.x][position.y];
         if (memo.otherRobotWallPriority > 0) {
@@ -316,7 +315,8 @@ class SolveBoard {
       return memo.shortestCount + (alreadyWall ? 0 : 1);
     }
 
-    final goalColor = board.goal.color;
+    // TODO GOALS
+    final goalColor = board.goals[0].color;
     int minCount = 1 << 30;
     if (goalColor == null) {
       for (final color in RobotColors.values) {

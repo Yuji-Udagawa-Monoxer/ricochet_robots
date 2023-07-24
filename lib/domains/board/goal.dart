@@ -42,6 +42,10 @@ class Goal {
     return Goal(color: _buildColor(n), type: _buildType(n));
   }
 
+  bool get isWild {
+    return color == null && type == null;
+  }
+
   Goal get nextColor {
     if (color == null) {
       return Goal(color: RobotColors.values[0], type: GoalTypes.values[0]);

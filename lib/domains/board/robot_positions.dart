@@ -38,6 +38,8 @@ class RobotPositions with _$RobotPositions {
     }
   }
 
+  List<Position> get positions => [red, blue, green, yellow];
+
   Set<Position> others({required RobotColors color}) => RobotColors.values
       .where((c) => c != color)
       .map((c) => position(color: c))

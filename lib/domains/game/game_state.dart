@@ -75,7 +75,7 @@ class GameState with _$GameState {
     );
     final nextHistories =
         nextPosition != currentPosition ? [...histories, history] : histories;
-    if (board.isGoal(nextPosition, focusedRobot)) {
+    if (board.isGoals(nextBoard.robotPositions.positions)) {
       return copyWith(
         mode: GameMode.showResult,
         board: nextBoard,
