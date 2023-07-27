@@ -36,13 +36,14 @@ class Board with _$Board {
     );
   }
 
-  static Board random(int shuffleGridCount) {
+  static Board random(int shuffleGridCount, int goalNumForNewBoard) {
     return synthesize(
       boardQuarterRed: randomRedBoard(),
       boardQuarterBlue: randomBlueBoard(),
       boardQuarterGreen: randomGreenBoard(),
       boardQuarterYellow: randomYellowBoard(),
       shuffleGridCount: shuffleGridCount,
+      goalNumForNewBoard: goalNumForNewBoard,
     );
   }
 
@@ -52,6 +53,7 @@ class Board with _$Board {
     required BoardQuarterGreen boardQuarterGreen,
     required BoardQuarterYellow boardQuarterYellow,
     int shuffleGridCount = 0,
+    int goalNumForNewBoard = 1,
   }) {
     final boardQuarters = [
       boardQuarterRed,
@@ -87,9 +89,19 @@ class Board with _$Board {
       }
     }
 
+    List<Goal> goals = [];
+    for (var i = 0; i < goalNumForNewBoard; ++i) {
+      final goalCandidate = Goal.random;
+      if (goals.any((goal) => goal.color == goalCandidate.color)) {
+        --i;
+      } else {
+        goals.add(goalCandidate);
+      }
+    }
+
     return init(
       grids: newGrids,
-      goals: [],
+      goals: goals,
     );
   }
 

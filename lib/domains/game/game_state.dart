@@ -28,6 +28,7 @@ class GameState with _$GameState {
     required int searchCount,
     required bool unlockSecretButton,
     required int shuffleGridCount,
+    required int goalNumForNewBoard,
   }) = _GameState;
 
   bool get shouldShowResult => mode == GameMode.showResult;
@@ -37,7 +38,8 @@ class GameState with _$GameState {
     required BoardId? boardId,
     bool unlockSecretButton = false,
   }) {
-    final board = boardId != null ? toBoard(boardId: boardId) : Board.random(0);
+    final board =
+        boardId != null ? toBoard(boardId: boardId) : Board.random(0, 1);
     return init(board: board, unlockSecretButton: unlockSecretButton);
   }
 
@@ -57,6 +59,7 @@ class GameState with _$GameState {
       searchCount: -1,
       unlockSecretButton: unlockSecretButton,
       shuffleGridCount: 0,
+      goalNumForNewBoard: 1,
     );
   }
 
@@ -102,7 +105,8 @@ class GameState with _$GameState {
   GameState onReplay() => copyWith(mode: GameMode.play);
 
   GameState onRestart() =>
-      copyWith(board: Board.random(shuffleGridCount)).initialized;
+      copyWith(board: Board.random(shuffleGridCount, goalNumForNewBoard))
+          .initialized;
 
   GameState onEditModeEvent({required bool toEditMode}) =>
       copyWith(mode: toEditMode ? GameMode.edit : GameMode.play);
@@ -128,6 +132,9 @@ class GameState with _$GameState {
 
   GameState onSetShuffleGridCount(int shuffleGridCount) =>
       copyWith(shuffleGridCount: shuffleGridCount);
+
+  GameState onSetGoalNumForNewBoard(int goalNumForNewBoard) =>
+      copyWith(goalNumForNewBoard: goalNumForNewBoard);
 
   GameState get initialized => copyWith(
         mode: GameMode.play,

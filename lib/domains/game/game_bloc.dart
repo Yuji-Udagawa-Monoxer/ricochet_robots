@@ -38,6 +38,8 @@ class GameBloc extends Bloc<GameEvent, GameState> {
         (event, emit) => emit(state.onSetSearchCount(event.searchCount)));
     on<SetShuffleGridCountEvent>((event, emit) =>
         emit(state.onSetShuffleGridCount(event.shuffleGridCount)));
+    on<SetGoalNumForNewBoardEvent>((event, emit) =>
+        emit(state.onSetGoalNumForNewBoard(event.goalNumForNewBoard)));
   }
 }
 
@@ -95,4 +97,10 @@ class SetShuffleGridCountEvent extends GameEvent {
   final int shuffleGridCount;
 
   const SetShuffleGridCountEvent({required this.shuffleGridCount});
+}
+
+class SetGoalNumForNewBoardEvent extends GameEvent {
+  final int goalNumForNewBoard;
+
+  const SetGoalNumForNewBoardEvent({required this.goalNumForNewBoard});
 }

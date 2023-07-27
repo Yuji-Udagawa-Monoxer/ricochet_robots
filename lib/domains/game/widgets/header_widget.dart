@@ -115,6 +115,19 @@ class HeaderWidget extends StatelessWidget {
     return Row(
       children: [
         DropdownButton<int>(
+          value: state.goalNumForNewBoard,
+          onChanged: (int? value) => bloc
+              .add(SetGoalNumForNewBoardEvent(goalNumForNewBoard: value ?? 1)),
+          items: List.generate(4, (index) => index + 1)
+              .map<DropdownMenuItem<int>>((int value) {
+            return DropdownMenuItem<int>(
+              value: value,
+              child: Text(value.toString()),
+            );
+          }).toList(),
+        ),
+        const SizedBox(width: 8.0),
+        DropdownButton<int>(
           value: state.shuffleGridCount,
           onChanged: (int? value) =>
               bloc.add(SetShuffleGridCountEvent(shuffleGridCount: value ?? 0)),
