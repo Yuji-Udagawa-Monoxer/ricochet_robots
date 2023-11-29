@@ -51,7 +51,8 @@ class GameWidget extends StatelessWidget {
                 child: ResultDialog(
                   moves: state.histories.length,
                   onPressCancel: () => bloc.add(const ReplayEvent()),
-                  onPressButton: () => bloc.add(const RestartEvent()),
+                  onPressButton: () =>
+                      bloc.add(const RestartEvent(isBoardRandom: true)),
                 ),
               ),
               Visibility(

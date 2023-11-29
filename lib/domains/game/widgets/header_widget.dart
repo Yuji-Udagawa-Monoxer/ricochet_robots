@@ -255,8 +255,19 @@ class HeaderWidget extends StatelessWidget {
                       style: _textStyle),
                   const SizedBox(width: 8.0),
                   IconButton(
-                    onPressed: () =>
-                        context.read<GameBloc>().add(const RestartEvent()),
+                    onPressed: () => context
+                        .read<GameBloc>()
+                        .add(const RestartEvent(isBoardRandom: false)),
+                    icon: const Icon(
+                      Icons.refresh,
+                      color: Colors.cyan,
+                      size: _iconSize,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => context
+                        .read<GameBloc>()
+                        .add(const RestartEvent(isBoardRandom: true)),
                     icon: const Icon(
                       Icons.refresh,
                       color: Colors.grey,

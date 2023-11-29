@@ -23,7 +23,8 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     );
     on<RedoEvent>((event, emit) => emit(state.onRedoPressed()));
     on<ReplayEvent>((event, emit) => emit(state.onReplay()));
-    on<RestartEvent>((event, emit) => emit(state.onRestart()));
+    on<RestartEvent>((event, emit) =>
+        emit(state.onRestart(isBoardRandom: event.isBoardRandom)));
     on<EditModeEvent>((event, emit) =>
         emit(state.onEditModeEvent(toEditMode: event.toEditMode)));
     on<EditBoardEvent>((event, emit) =>
@@ -68,7 +69,9 @@ class ReplayEvent extends GameEvent {
 }
 
 class RestartEvent extends GameEvent {
-  const RestartEvent();
+  final bool isBoardRandom;
+
+  const RestartEvent({required this.isBoardRandom});
 }
 
 class EditModeEvent extends GameEvent {

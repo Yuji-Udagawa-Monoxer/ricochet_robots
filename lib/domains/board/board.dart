@@ -36,7 +36,15 @@ class Board with _$Board {
     );
   }
 
-  static Board random(int shuffleGridCount, int goalNumForNewBoard) {
+  static Board random(int shuffleGridCount, int goalNumForNewBoard,
+      {Board? newBoard}) {
+    if (newBoard != null) {
+      return Board(
+        grids: newBoard.grids,
+        goals: randomGoal(goalNumForNewBoard),
+        robotPositions: RobotPositions.random(grids: newBoard.grids),
+      );
+    }
     return synthesize(
       boardQuarterRed: randomRedBoard(),
       boardQuarterBlue: randomBlueBoard(),
@@ -89,6 +97,13 @@ class Board with _$Board {
       }
     }
 
+    return init(
+      grids: newGrids,
+      goals: randomGoal(goalNumForNewBoard),
+    );
+  }
+
+  static List<Goal> randomGoal(int goalNumForNewBoard) {
     List<Goal> goals = [];
     for (var i = 0; i < goalNumForNewBoard; ++i) {
       final goalCandidate = Goal.random;
@@ -98,11 +113,7 @@ class Board with _$Board {
         goals.add(goalCandidate);
       }
     }
-
-    return init(
-      grids: newGrids,
-      goals: goals,
-    );
+    return goals;
   }
 
   static List<List<Grid>> fixQuarterBorder(List<List<Grid>> grids) {

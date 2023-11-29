@@ -104,9 +104,13 @@ class GameState with _$GameState {
 
   GameState onReplay() => copyWith(mode: GameMode.play);
 
-  GameState onRestart() =>
-      copyWith(board: Board.random(shuffleGridCount, goalNumForNewBoard))
-          .initialized;
+  GameState onRestart({required bool isBoardRandom}) => copyWith(
+        board: Board.random(
+          shuffleGridCount,
+          goalNumForNewBoard,
+          newBoard: isBoardRandom ? null : board,
+        ),
+      ).initialized;
 
   GameState onEditModeEvent({required bool toEditMode}) =>
       copyWith(mode: toEditMode ? GameMode.edit : GameMode.play);
