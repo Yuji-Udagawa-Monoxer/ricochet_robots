@@ -112,6 +112,45 @@ class GameState with _$GameState {
         ),
       ).initialized;
 
+  GameState onRestartConditional({
+    required bool isBoardRandom,
+    required int minRobotColorCount,
+    required int minGoalCount,
+  }) {
+    isBoardRequired(board, minRobotColorCount, minGoalCount) {
+      final solveBoard = SolveBoard(board: board);
+      final answerHistories = solveBoard.solve();
+      if (answerHistories.isEmpty) {
+        return false;
+      }
+      final answerMoveHistory = answerHistories[0];
+      final colorCount = answerMoveHistory.records
+          .map((record) => record.color)
+          .toSet()
+          .length;
+      return colorCount >= minRobotColorCount &&
+          answerMoveHistory.records.length >= minGoalCount;
+    }
+
+    createRandomBoard() {
+      return Board.random(
+        shuffleGridCount,
+        goalNumForNewBoard,
+        newBoard: isBoardRandom ? null : board,
+      );
+    }
+
+    Board newBoard = createRandomBoard();
+    for (var i = 0; i < 100; i++) {
+      if (isBoardRequired(newBoard, minRobotColorCount, minGoalCount)) {
+        break;
+      }
+      newBoard = createRandomBoard();
+    }
+
+    return copyWith(board: newBoard).initialized;
+  }
+
   GameState onEditModeEvent({required bool toEditMode}) =>
       copyWith(mode: toEditMode ? GameMode.edit : GameMode.play);
 

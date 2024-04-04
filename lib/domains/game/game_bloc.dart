@@ -25,6 +25,11 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     on<ReplayEvent>((event, emit) => emit(state.onReplay()));
     on<RestartEvent>((event, emit) =>
         emit(state.onRestart(isBoardRandom: event.isBoardRandom)));
+    on<RestartConditionalEvent>((event, emit) => emit(
+        state.onRestartConditional(
+            isBoardRandom: event.isBoardRandom,
+            minRobotColorCount: event.minRobotColorCount,
+            minGoalCount: event.minGoalCount)));
     on<EditModeEvent>((event, emit) =>
         emit(state.onEditModeEvent(toEditMode: event.toEditMode)));
     on<EditBoardEvent>((event, emit) =>
@@ -72,6 +77,18 @@ class RestartEvent extends GameEvent {
   final bool isBoardRandom;
 
   const RestartEvent({required this.isBoardRandom});
+}
+
+class RestartConditionalEvent extends GameEvent {
+  final bool isBoardRandom;
+  final int minRobotColorCount;
+  final int minGoalCount;
+
+  const RestartConditionalEvent({
+    required this.isBoardRandom,
+    this.minRobotColorCount = 2,
+    this.minGoalCount = 7,
+  });
 }
 
 class EditModeEvent extends GameEvent {
