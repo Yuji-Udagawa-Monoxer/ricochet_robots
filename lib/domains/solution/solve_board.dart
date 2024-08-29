@@ -87,12 +87,12 @@ class SolveBoard {
         isFinishedIfFound = searchFinishedCount < 0,
         _movedNext = board.makeMovedNext;
 
-  List<MoveHistory> solve() {
+  List<MoveHistory> solve({bool isLog = true}) {
     stopwatch.start();
     _init();
     _solve();
     stopwatch.stop();
-    _resultLog();
+    if (isLog) _resultLog();
     return answers;
   }
 

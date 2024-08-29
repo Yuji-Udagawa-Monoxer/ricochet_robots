@@ -29,6 +29,8 @@ class GameState with _$GameState {
     required bool unlockSecretButton,
     required int shuffleGridCount,
     required int goalNumForNewBoard,
+    required int movedRobotNumWhenSearchNewBoard,
+    required int movedCountWhenSearchNewBoard,
   }) = _GameState;
 
   bool get shouldShowResult => mode == GameMode.showResult;
@@ -60,6 +62,8 @@ class GameState with _$GameState {
       unlockSecretButton: unlockSecretButton,
       shuffleGridCount: 0,
       goalNumForNewBoard: 1,
+      movedRobotNumWhenSearchNewBoard: 2,
+      movedCountWhenSearchNewBoard: 7,
     );
   }
 
@@ -114,12 +118,14 @@ class GameState with _$GameState {
 
   GameState onRestartConditional({
     required bool isBoardRandom,
-    required int minRobotColorCount,
-    required int minGoalCount,
   }) {
-    isBoardRequired(board, minRobotColorCount, minGoalCount) {
+    isBoardRequired(
+      board,
+      movedRobotNumWhenSearchNewBoard,
+      movedCountWhenSearchNewBoard,
+    ) {
       final solveBoard = SolveBoard(board: board);
-      final answerHistories = solveBoard.solve();
+      final answerHistories = solveBoard.solve(isLog: false);
       if (answerHistories.isEmpty) {
         return false;
       }
@@ -128,8 +134,8 @@ class GameState with _$GameState {
           .map((record) => record.color)
           .toSet()
           .length;
-      return colorCount >= minRobotColorCount &&
-          answerMoveHistory.records.length >= minGoalCount;
+      return colorCount >= movedRobotNumWhenSearchNewBoard &&
+          answerMoveHistory.records.length >= movedCountWhenSearchNewBoard;
     }
 
     createRandomBoard() {
@@ -141,11 +147,22 @@ class GameState with _$GameState {
     }
 
     Board newBoard = createRandomBoard();
-    for (var i = 0; i < 100; i++) {
-      if (isBoardRequired(newBoard, minRobotColorCount, minGoalCount)) {
+    const maxTryCount = 100;
+    for (var i = 0; i < maxTryCount; i++) {
+      if (isBoardRequired(
+        newBoard,
+        movedRobotNumWhenSearchNewBoard,
+        movedCountWhenSearchNewBoard,
+      )) {
+        debugPrint(
+            "Tried ${i + 1} times and found a board that met the requirements");
         break;
       }
       newBoard = createRandomBoard();
+      if (i == maxTryCount - 1) {
+        debugPrint(
+            "Tried 100 times and could not find a board that met the requirements");
+      }
     }
 
     return copyWith(board: newBoard).initialized;
@@ -178,6 +195,15 @@ class GameState with _$GameState {
 
   GameState onSetGoalNumForNewBoard(int goalNumForNewBoard) =>
       copyWith(goalNumForNewBoard: goalNumForNewBoard);
+
+  GameState onSetMovedRobotNumWhenSearchNewBoard(
+          int movedRobotNumWhenSearchNewBoard) =>
+      copyWith(
+          movedRobotNumWhenSearchNewBoard: movedRobotNumWhenSearchNewBoard);
+
+  GameState onSetMovedCountWhenSearchNewBoard(
+          int movedCountWhenSearchNewBoard) =>
+      copyWith(movedCountWhenSearchNewBoard: movedCountWhenSearchNewBoard);
 
   GameState get initialized => copyWith(
         mode: GameMode.play,

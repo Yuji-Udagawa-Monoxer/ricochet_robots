@@ -25,11 +25,8 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     on<ReplayEvent>((event, emit) => emit(state.onReplay()));
     on<RestartEvent>((event, emit) =>
         emit(state.onRestart(isBoardRandom: event.isBoardRandom)));
-    on<RestartConditionalEvent>((event, emit) => emit(
-        state.onRestartConditional(
-            isBoardRandom: event.isBoardRandom,
-            minRobotColorCount: event.minRobotColorCount,
-            minGoalCount: event.minGoalCount)));
+    on<RestartConditionalEvent>((event, emit) =>
+        emit(state.onRestartConditional(isBoardRandom: event.isBoardRandom)));
     on<EditModeEvent>((event, emit) =>
         emit(state.onEditModeEvent(toEditMode: event.toEditMode)));
     on<EditBoardEvent>((event, emit) =>
@@ -46,6 +43,12 @@ class GameBloc extends Bloc<GameEvent, GameState> {
         emit(state.onSetShuffleGridCount(event.shuffleGridCount)));
     on<SetGoalNumForNewBoardEvent>((event, emit) =>
         emit(state.onSetGoalNumForNewBoard(event.goalNumForNewBoard)));
+    on<SetMovedRobotNumWhenSearchNewBoardEvent>((event, emit) => emit(
+        state.onSetMovedRobotNumWhenSearchNewBoard(
+            event.movedRobotNumWhenSearchNewBoard)));
+    on<SetMovedCountWhenSearchNewBoardEvent>((event, emit) => emit(
+        state.onSetMovedCountWhenSearchNewBoard(
+            event.movedCountWhenSearchNewBoard)));
   }
 }
 
@@ -81,13 +84,9 @@ class RestartEvent extends GameEvent {
 
 class RestartConditionalEvent extends GameEvent {
   final bool isBoardRandom;
-  final int minRobotColorCount;
-  final int minGoalCount;
 
   const RestartConditionalEvent({
     required this.isBoardRandom,
-    this.minRobotColorCount = 2,
-    this.minGoalCount = 7,
   });
 }
 
@@ -123,4 +122,18 @@ class SetGoalNumForNewBoardEvent extends GameEvent {
   final int goalNumForNewBoard;
 
   const SetGoalNumForNewBoardEvent({required this.goalNumForNewBoard});
+}
+
+class SetMovedRobotNumWhenSearchNewBoardEvent extends GameEvent {
+  final int movedRobotNumWhenSearchNewBoard;
+
+  const SetMovedRobotNumWhenSearchNewBoardEvent(
+      {required this.movedRobotNumWhenSearchNewBoard});
+}
+
+class SetMovedCountWhenSearchNewBoardEvent extends GameEvent {
+  final int movedCountWhenSearchNewBoard;
+
+  const SetMovedCountWhenSearchNewBoardEvent(
+      {required this.movedCountWhenSearchNewBoard});
 }

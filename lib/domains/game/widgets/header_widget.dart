@@ -150,6 +150,34 @@ class HeaderWidget extends StatelessWidget {
             size: _iconSize,
           ),
         ),
+        DropdownButton<int>(
+          value: state.movedRobotNumWhenSearchNewBoard,
+          onChanged: (int? value) => bloc.add(
+              SetMovedRobotNumWhenSearchNewBoardEvent(
+                  movedRobotNumWhenSearchNewBoard: value ?? 1)),
+          items: List.generate(4, (index) => index + 1)
+              .map<DropdownMenuItem<int>>((int value) {
+            return DropdownMenuItem<int>(
+              value: value,
+              child: Text(value.toString()),
+            );
+          }).toList(),
+          dropdownColor: Colors.purple,
+        ),
+        DropdownButton<int>(
+          value: state.movedCountWhenSearchNewBoard,
+          onChanged: (int? value) => bloc.add(
+              SetMovedCountWhenSearchNewBoardEvent(
+                  movedCountWhenSearchNewBoard: value ?? 1)),
+          items: List.generate(20, (index) => index + 1)
+              .map<DropdownMenuItem<int>>((int value) {
+            return DropdownMenuItem<int>(
+              value: value,
+              child: Text(value.toString()),
+            );
+          }).toList(),
+          dropdownColor: Colors.purple,
+        ),
         IconButton(
           onPressed: () => bloc.add(const SolveEvent()),
           icon: const Icon(
