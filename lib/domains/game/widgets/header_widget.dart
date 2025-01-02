@@ -110,100 +110,186 @@ class HeaderWidget extends StatelessWidget {
     );
   }
 
+  List<Widget> _buildForNewBoard(
+      BuildContext context, GameBloc bloc, GameState state) {
+    return [
+      DropdownButton<int>(
+        value: state.goalNumForNewBoard,
+        onChanged: (int? value) => bloc
+            .add(SetGoalNumForNewBoardEvent(goalNumForNewBoard: value ?? 1)),
+        items: List.generate(4, (index) => index + 1)
+            .map<DropdownMenuItem<int>>((int value) {
+          return DropdownMenuItem<int>(
+            value: value,
+            child: Text(value.toString()),
+          );
+        }).toList(),
+      ),
+      const SizedBox(width: 8.0),
+      DropdownButton<int>(
+        value: state.shuffleGridCount,
+        onChanged: (int? value) =>
+            bloc.add(SetShuffleGridCountEvent(shuffleGridCount: value ?? 0)),
+        items: List.generate(100 + 1, (index) => index)
+            .map<DropdownMenuItem<int>>((int value) {
+          return DropdownMenuItem<int>(
+            value: value,
+            child: Text(value.toString()),
+          );
+        }).toList(),
+      ),
+    ];
+  }
+
+  List<Widget> _buildForDebugPrint(
+      BuildContext context, GameBloc bloc, GameState state) {
+    return [
+      IconButton(
+        onPressed: () {
+          debugPrint(RobotPositions.toHash(board.robotPositions).toString());
+          debugPrint(board.toBoardText);
+        },
+        icon: const Icon(
+          Icons.plagiarism,
+          color: Colors.grey,
+          size: _iconSize,
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildForSearchNewBoard(
+      BuildContext context, GameBloc bloc, GameState state) {
+    return [
+      DropdownButton<int>(
+        value: state.movedRobotNumWhenSearchNewBoard,
+        onChanged: (int? value) => bloc.add(
+            SetMovedRobotNumWhenSearchNewBoardEvent(
+                movedRobotNumWhenSearchNewBoard: value ?? 1)),
+        items: List.generate(4, (index) => index + 1)
+            .map<DropdownMenuItem<int>>((int value) {
+          return DropdownMenuItem<int>(
+            value: value,
+            child: Text(value.toString()),
+          );
+        }).toList(),
+        dropdownColor: Colors.purple,
+      ),
+      DropdownButton<int>(
+        value: state.movedCountWhenSearchNewBoard,
+        onChanged: (int? value) => bloc.add(
+            SetMovedCountWhenSearchNewBoardEvent(
+                movedCountWhenSearchNewBoard: value ?? 1)),
+        items: List.generate(20, (index) => index + 1)
+            .map<DropdownMenuItem<int>>((int value) {
+          return DropdownMenuItem<int>(
+            value: value,
+            child: Text(value.toString()),
+          );
+        }).toList(),
+        dropdownColor: Colors.purple,
+      ),
+      const SizedBox(width: 8.0),
+      DropdownButton<int>(
+        value: state.lengthWeightWhenSearchNewBoard,
+        onChanged: (int? value) => bloc.add(
+            SetLengthWeightWhenSearchNewBoardEvent(
+                lengthWeightWhenSearchNewBoard: value ?? 1)),
+        items: List.generate(5, (index) => index + 1)
+            .map<DropdownMenuItem<int>>((int value) {
+          return DropdownMenuItem<int>(
+            value: value,
+            child: Text(value.toString()),
+          );
+        }).toList(),
+        dropdownColor: Colors.green,
+      ),
+      DropdownButton<int>(
+        value: state.robotCollisionWeightWhenSearchNewBoard,
+        onChanged: (int? value) => bloc.add(
+            SetRobotCollisionWeightWhenSearchNewBoardEvent(
+                robotCollisionWeightWhenSearchNewBoard: value ?? 1)),
+        items: List.generate(50, (index) => index + 1)
+            .map<DropdownMenuItem<int>>((int value) {
+          return DropdownMenuItem<int>(
+            value: value,
+            child: Text(value.toString()),
+          );
+        }).toList(),
+        dropdownColor: Colors.green,
+      ),
+      DropdownButton<int>(
+        value: state.innerWallCollisionWeightWhenSearchNewBoard,
+        onChanged: (int? value) => bloc.add(
+            SetInnerWallCollisionWeightWhenSearchNewBoardEvent(
+                innerWallCollisionWeightWhenSearchNewBoard: value ?? 1)),
+        items: List.generate(50, (index) => index + 1)
+            .map<DropdownMenuItem<int>>((int value) {
+          return DropdownMenuItem<int>(
+            value: value,
+            child: Text(value.toString()),
+          );
+        }).toList(),
+        dropdownColor: Colors.green,
+      ),
+      DropdownButton<int>(
+        value: state.lowerWeightWhenSearchNewBoard,
+        onChanged: (int? value) => bloc.add(
+            SetLowerWeightWhenSearchNewBoardEvent(
+                lowerWeightWhenSearchNewBoard: value ?? 0)),
+        items: List.generate(20, (index) => index * 10)
+            .map<DropdownMenuItem<int>>((int value) {
+          return DropdownMenuItem<int>(
+            value: value,
+            child: Text(value.toString()),
+          );
+        }).toList(),
+        dropdownColor: Colors.green,
+      ),
+      const SizedBox(width: 8.0),
+    ];
+  }
+
+  List<Widget> _buildForSolveBoard(
+      BuildContext context, GameBloc bloc, GameState state) {
+    return [
+      IconButton(
+        onPressed: () => bloc.add(const SolveEvent()),
+        icon: const Icon(
+          Icons.play_arrow,
+          color: Colors.grey,
+          size: _iconSize,
+        ),
+      ),
+      DropdownButton<int>(
+        value: state.searchCount,
+        onChanged: (int? value) =>
+            bloc.add(SetSearchCountEvent(searchCount: value ?? -1)),
+        items: List.generate(30 + 1, (index) {
+          if (index == 0) {
+            return -1;
+          }
+          return index;
+        }).map<DropdownMenuItem<int>>((int value) {
+          return DropdownMenuItem<int>(
+            value: value,
+            child: Text(value == -1 ? 'First' : value.toString()),
+          );
+        }).toList(),
+      ),
+    ];
+  }
+
   Widget _buildSolveForm(BuildContext context, GameState state) {
     final bloc = context.read<GameBloc>();
     return Row(
-      children: [
-        DropdownButton<int>(
-          value: state.goalNumForNewBoard,
-          onChanged: (int? value) => bloc
-              .add(SetGoalNumForNewBoardEvent(goalNumForNewBoard: value ?? 1)),
-          items: List.generate(4, (index) => index + 1)
-              .map<DropdownMenuItem<int>>((int value) {
-            return DropdownMenuItem<int>(
-              value: value,
-              child: Text(value.toString()),
-            );
-          }).toList(),
-        ),
-        const SizedBox(width: 8.0),
-        DropdownButton<int>(
-          value: state.shuffleGridCount,
-          onChanged: (int? value) =>
-              bloc.add(SetShuffleGridCountEvent(shuffleGridCount: value ?? 0)),
-          items: List.generate(100 + 1, (index) => index)
-              .map<DropdownMenuItem<int>>((int value) {
-            return DropdownMenuItem<int>(
-              value: value,
-              child: Text(value.toString()),
-            );
-          }).toList(),
-        ),
-        IconButton(
-          onPressed: () {
-            debugPrint(RobotPositions.toHash(board.robotPositions).toString());
-            debugPrint(board.toBoardText);
-          },
-          icon: const Icon(
-            Icons.plagiarism,
-            color: Colors.grey,
-            size: _iconSize,
-          ),
-        ),
-        DropdownButton<int>(
-          value: state.movedRobotNumWhenSearchNewBoard,
-          onChanged: (int? value) => bloc.add(
-              SetMovedRobotNumWhenSearchNewBoardEvent(
-                  movedRobotNumWhenSearchNewBoard: value ?? 1)),
-          items: List.generate(4, (index) => index + 1)
-              .map<DropdownMenuItem<int>>((int value) {
-            return DropdownMenuItem<int>(
-              value: value,
-              child: Text(value.toString()),
-            );
-          }).toList(),
-          dropdownColor: Colors.purple,
-        ),
-        DropdownButton<int>(
-          value: state.movedCountWhenSearchNewBoard,
-          onChanged: (int? value) => bloc.add(
-              SetMovedCountWhenSearchNewBoardEvent(
-                  movedCountWhenSearchNewBoard: value ?? 1)),
-          items: List.generate(20, (index) => index + 1)
-              .map<DropdownMenuItem<int>>((int value) {
-            return DropdownMenuItem<int>(
-              value: value,
-              child: Text(value.toString()),
-            );
-          }).toList(),
-          dropdownColor: Colors.purple,
-        ),
-        IconButton(
-          onPressed: () => bloc.add(const SolveEvent()),
-          icon: const Icon(
-            Icons.play_arrow,
-            color: Colors.grey,
-            size: _iconSize,
-          ),
-        ),
-        DropdownButton<int>(
-          value: state.searchCount,
-          onChanged: (int? value) =>
-              bloc.add(SetSearchCountEvent(searchCount: value ?? -1)),
-          items: List.generate(30 + 1, (index) {
-            if (index == 0) {
-              return -1;
-            }
-            return index;
-          }).map<DropdownMenuItem<int>>((int value) {
-            return DropdownMenuItem<int>(
-              value: value,
-              child: Text(value == -1 ? 'First' : value.toString()),
-            );
-          }).toList(),
-        ),
-        const SizedBox(width: 8.0),
-      ],
+      children: _buildForNewBoard(context, bloc, state) +
+          _buildForDebugPrint(context, bloc, state) +
+          _buildForSearchNewBoard(context, bloc, state) +
+          _buildForSolveBoard(context, bloc, state) +
+          [
+            const SizedBox(width: 8.0),
+          ],
     );
   }
 
@@ -292,15 +378,33 @@ class HeaderWidget extends StatelessWidget {
                       size: _iconSize,
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => context.read<GameBloc>().add(
-                        const RestartConditionalEvent(isBoardRandom: true)),
-                    icon: const Icon(
-                      Icons.refresh,
-                      color: Colors.purple,
-                      size: _iconSize,
-                    ),
-                  ),
+                  state.unlockSecretButton
+                      ? IconButton(
+                          onPressed: () => context.read<GameBloc>().add(
+                              const RestartConditionalEvent(
+                                  isBoardRandom: true, isLowerWeight: false)),
+                          icon: const Icon(
+                            Icons.refresh,
+                            color: Colors.purple,
+                            size: _iconSize,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                  state.unlockSecretButton
+                      ? IconButton(
+                          onPressed: () => context
+                              .read<GameBloc>()
+                              .add(const RestartConditionalEvent(
+                                isBoardRandom: true,
+                                isLowerWeight: true,
+                              )),
+                          icon: const Icon(
+                            Icons.refresh,
+                            color: Colors.green,
+                            size: _iconSize,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
                   IconButton(
                     onPressed: () => context
                         .read<GameBloc>()

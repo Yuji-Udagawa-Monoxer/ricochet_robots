@@ -10,6 +10,8 @@ import 'package:ricochet_robots/domains/edit/edit.dart';
 import 'package:ricochet_robots/domains/game/history.dart';
 import 'package:ricochet_robots/domains/solution/solve_board.dart';
 
+import '../solution/count_board.dart';
+
 part 'game_state.freezed.dart';
 
 enum GameMode { play, showResult, edit, wait }
@@ -31,6 +33,10 @@ class GameState with _$GameState {
     required int goalNumForNewBoard,
     required int movedRobotNumWhenSearchNewBoard,
     required int movedCountWhenSearchNewBoard,
+    required int lengthWeightWhenSearchNewBoard,
+    required int robotCollisionWeightWhenSearchNewBoard,
+    required int innerWallCollisionWeightWhenSearchNewBoard,
+    required int lowerWeightWhenSearchNewBoard,
   }) = _GameState;
 
   bool get shouldShowResult => mode == GameMode.showResult;
@@ -64,6 +70,10 @@ class GameState with _$GameState {
       goalNumForNewBoard: 1,
       movedRobotNumWhenSearchNewBoard: 2,
       movedCountWhenSearchNewBoard: 7,
+      lengthWeightWhenSearchNewBoard: 1,
+      robotCollisionWeightWhenSearchNewBoard: 20,
+      innerWallCollisionWeightWhenSearchNewBoard: 10,
+      lowerWeightWhenSearchNewBoard: 100,
     );
   }
 
@@ -118,11 +128,16 @@ class GameState with _$GameState {
 
   GameState onRestartConditional({
     required bool isBoardRandom,
+    required bool isLowerWeight,
   }) {
     isBoardRequired(
       board,
       movedRobotNumWhenSearchNewBoard,
       movedCountWhenSearchNewBoard,
+      lengthWeightWhenSearchNewBoard,
+      robotCollisionWeightWhenSearchNewBoard,
+      innerWallCollisionWeightWhenSearchNewBoard,
+      lowerWeightWhenSearchNewBoard,
     ) {
       final solveBoard = SolveBoard(board: board);
       final answerHistories = solveBoard.solve(isLog: false);
@@ -130,12 +145,31 @@ class GameState with _$GameState {
         return false;
       }
       final answerMoveHistory = answerHistories[0];
+
       final colorCount = answerMoveHistory.records
           .map((record) => record.color)
           .toSet()
           .length;
-      return colorCount >= movedRobotNumWhenSearchNewBoard &&
-          answerMoveHistory.records.length >= movedCountWhenSearchNewBoard;
+      if (!(colorCount >= movedRobotNumWhenSearchNewBoard &&
+          answerMoveHistory.records.length >= movedCountWhenSearchNewBoard)) {
+        return false;
+      }
+
+      final tuple =
+          CountBoard(board: board, moveHistory: answerMoveHistory).count();
+      final movedLength = tuple.item1;
+      final robotCollisionNum = tuple.item2;
+      final innerWallCollisionNum = tuple.item3;
+      final weight = movedLength * lengthWeightWhenSearchNewBoard +
+          robotCollisionNum * robotCollisionWeightWhenSearchNewBoard +
+          innerWallCollisionNum * innerWallCollisionWeightWhenSearchNewBoard;
+      if (weight < lowerWeightWhenSearchNewBoard) {
+        return false;
+      }
+
+      debugPrint("Weight: $weight($tuple)");
+
+      return true;
     }
 
     createRandomBoard() {
@@ -153,6 +187,10 @@ class GameState with _$GameState {
         newBoard,
         movedRobotNumWhenSearchNewBoard,
         movedCountWhenSearchNewBoard,
+        lengthWeightWhenSearchNewBoard,
+        robotCollisionWeightWhenSearchNewBoard,
+        innerWallCollisionWeightWhenSearchNewBoard,
+        isLowerWeight ? lowerWeightWhenSearchNewBoard : 0,
       )) {
         debugPrint(
             "Tried ${i + 1} times and found a board that met the requirements");
@@ -204,6 +242,26 @@ class GameState with _$GameState {
   GameState onSetMovedCountWhenSearchNewBoard(
           int movedCountWhenSearchNewBoard) =>
       copyWith(movedCountWhenSearchNewBoard: movedCountWhenSearchNewBoard);
+
+  GameState onSetLengthWeightWhenSearchNewBoard(
+          int lengthWeightWhenSearchNewBoard) =>
+      copyWith(lengthWeightWhenSearchNewBoard: lengthWeightWhenSearchNewBoard);
+
+  GameState onSetRobotCollisionWeightWhenSearchNewBoard(
+          int robotCollisionWeightWhenSearchNewBoard) =>
+      copyWith(
+          robotCollisionWeightWhenSearchNewBoard:
+              robotCollisionWeightWhenSearchNewBoard);
+
+  GameState onSetInnerWallCollisionWeightWhenSearchNewBoard(
+          int innerWallCollisionWeightWhenSearchNewBoard) =>
+      copyWith(
+          innerWallCollisionWeightWhenSearchNewBoard:
+              innerWallCollisionWeightWhenSearchNewBoard);
+
+  GameState onSetLowerWeightWhenSearchNewBoard(
+          int lowerWeightWhenSearchNewBoard) =>
+      copyWith(lowerWeightWhenSearchNewBoard: lowerWeightWhenSearchNewBoard);
 
   GameState get initialized => copyWith(
         mode: GameMode.play,

@@ -25,6 +25,16 @@ class Grids {
     return false;
   }
 
+  bool isOuter({required Position position}) {
+    if (position.y == 0 || position.y == grids.length - 1) {
+      return true;
+    }
+    if (position.x == 0 || position.x == grids[position.y].length - 1) {
+      return true;
+    }
+    return false;
+  }
+
   Directions? _wallDirection({required Position position}) {
     if (position.y == 0) {
       return Directions.up;

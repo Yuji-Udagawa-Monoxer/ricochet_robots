@@ -25,8 +25,10 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     on<ReplayEvent>((event, emit) => emit(state.onReplay()));
     on<RestartEvent>((event, emit) =>
         emit(state.onRestart(isBoardRandom: event.isBoardRandom)));
-    on<RestartConditionalEvent>((event, emit) =>
-        emit(state.onRestartConditional(isBoardRandom: event.isBoardRandom)));
+    on<RestartConditionalEvent>((event, emit) => emit(
+        state.onRestartConditional(
+            isBoardRandom: event.isBoardRandom,
+            isLowerWeight: event.isLowerWeight)));
     on<EditModeEvent>((event, emit) =>
         emit(state.onEditModeEvent(toEditMode: event.toEditMode)));
     on<EditBoardEvent>((event, emit) =>
@@ -49,6 +51,18 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     on<SetMovedCountWhenSearchNewBoardEvent>((event, emit) => emit(
         state.onSetMovedCountWhenSearchNewBoard(
             event.movedCountWhenSearchNewBoard)));
+    on<SetLengthWeightWhenSearchNewBoardEvent>((event, emit) => emit(
+        state.onSetLengthWeightWhenSearchNewBoard(
+            event.lengthWeightWhenSearchNewBoard)));
+    on<SetRobotCollisionWeightWhenSearchNewBoardEvent>((event, emit) => emit(
+        state.onSetRobotCollisionWeightWhenSearchNewBoard(
+            event.robotCollisionWeightWhenSearchNewBoard)));
+    on<SetInnerWallCollisionWeightWhenSearchNewBoardEvent>((event, emit) =>
+        emit(state.onSetInnerWallCollisionWeightWhenSearchNewBoard(
+            event.innerWallCollisionWeightWhenSearchNewBoard)));
+    on<SetLowerWeightWhenSearchNewBoardEvent>((event, emit) => emit(
+        state.onSetLowerWeightWhenSearchNewBoard(
+            event.lowerWeightWhenSearchNewBoard)));
   }
 }
 
@@ -84,10 +98,10 @@ class RestartEvent extends GameEvent {
 
 class RestartConditionalEvent extends GameEvent {
   final bool isBoardRandom;
+  final bool isLowerWeight;
 
-  const RestartConditionalEvent({
-    required this.isBoardRandom,
-  });
+  const RestartConditionalEvent(
+      {required this.isBoardRandom, required this.isLowerWeight});
 }
 
 class EditModeEvent extends GameEvent {
@@ -136,4 +150,32 @@ class SetMovedCountWhenSearchNewBoardEvent extends GameEvent {
 
   const SetMovedCountWhenSearchNewBoardEvent(
       {required this.movedCountWhenSearchNewBoard});
+}
+
+class SetLengthWeightWhenSearchNewBoardEvent extends GameEvent {
+  final int lengthWeightWhenSearchNewBoard;
+
+  const SetLengthWeightWhenSearchNewBoardEvent(
+      {required this.lengthWeightWhenSearchNewBoard});
+}
+
+class SetRobotCollisionWeightWhenSearchNewBoardEvent extends GameEvent {
+  final int robotCollisionWeightWhenSearchNewBoard;
+
+  const SetRobotCollisionWeightWhenSearchNewBoardEvent(
+      {required this.robotCollisionWeightWhenSearchNewBoard});
+}
+
+class SetInnerWallCollisionWeightWhenSearchNewBoardEvent extends GameEvent {
+  final int innerWallCollisionWeightWhenSearchNewBoard;
+
+  const SetInnerWallCollisionWeightWhenSearchNewBoardEvent(
+      {required this.innerWallCollisionWeightWhenSearchNewBoard});
+}
+
+class SetLowerWeightWhenSearchNewBoardEvent extends GameEvent {
+  final int lowerWeightWhenSearchNewBoard;
+
+  const SetLowerWeightWhenSearchNewBoardEvent(
+      {required this.lowerWeightWhenSearchNewBoard});
 }
