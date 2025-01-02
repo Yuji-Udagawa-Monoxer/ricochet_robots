@@ -40,4 +40,19 @@ class CountBoard {
 
     return Tuple3(movedLength, robotCollisionNum, innerWallCollisionNum);
   }
+
+  // [movedLength, robotCollisionNum, innerWallCollisionNum], difficulty
+  Tuple2<Tuple3<int, int, int>, int> countAndDifficulty(
+    int lengthWeightWhenSearchNewBoard,
+    int robotCollisionWeightWhenSearchNewBoard,
+    int innerWallCollisionWeightWhenSearchNewBoard,
+  ) {
+    final tuple = count();
+    return Tuple2(
+      tuple,
+      tuple.item1 * lengthWeightWhenSearchNewBoard +
+          tuple.item2 * robotCollisionWeightWhenSearchNewBoard +
+          tuple.item3 * innerWallCollisionWeightWhenSearchNewBoard,
+    );
+  }
 }

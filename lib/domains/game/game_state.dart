@@ -36,7 +36,7 @@ class GameState with _$GameState {
     required int lengthWeightWhenSearchNewBoard,
     required int robotCollisionWeightWhenSearchNewBoard,
     required int innerWallCollisionWeightWhenSearchNewBoard,
-    required int lowerWeightWhenSearchNewBoard,
+    required int lowerDifficultyWhenSearchNewBoard,
   }) = _GameState;
 
   bool get shouldShowResult => mode == GameMode.showResult;
@@ -73,7 +73,7 @@ class GameState with _$GameState {
       lengthWeightWhenSearchNewBoard: 1,
       robotCollisionWeightWhenSearchNewBoard: 20,
       innerWallCollisionWeightWhenSearchNewBoard: 10,
-      lowerWeightWhenSearchNewBoard: 100,
+      lowerDifficultyWhenSearchNewBoard: 100,
     );
   }
 
@@ -128,7 +128,7 @@ class GameState with _$GameState {
 
   GameState onRestartConditional({
     required bool isBoardRandom,
-    required bool isLowerWeight,
+    required bool isLowerDifficulty,
   }) {
     isBoardRequired(
       board,
@@ -137,7 +137,7 @@ class GameState with _$GameState {
       lengthWeightWhenSearchNewBoard,
       robotCollisionWeightWhenSearchNewBoard,
       innerWallCollisionWeightWhenSearchNewBoard,
-      lowerWeightWhenSearchNewBoard,
+      lowerDifficultyWhenSearchNewBoard,
     ) {
       final solveBoard = SolveBoard(board: board);
       final answerHistories = solveBoard.solve(isLog: false);
@@ -160,14 +160,12 @@ class GameState with _$GameState {
       final movedLength = tuple.item1;
       final robotCollisionNum = tuple.item2;
       final innerWallCollisionNum = tuple.item3;
-      final weight = movedLength * lengthWeightWhenSearchNewBoard +
+      final difficulty = movedLength * lengthWeightWhenSearchNewBoard +
           robotCollisionNum * robotCollisionWeightWhenSearchNewBoard +
           innerWallCollisionNum * innerWallCollisionWeightWhenSearchNewBoard;
-      if (weight < lowerWeightWhenSearchNewBoard) {
+      if (difficulty < lowerDifficultyWhenSearchNewBoard) {
         return false;
       }
-
-      debugPrint("Weight: $weight($tuple)");
 
       return true;
     }
@@ -190,7 +188,7 @@ class GameState with _$GameState {
         lengthWeightWhenSearchNewBoard,
         robotCollisionWeightWhenSearchNewBoard,
         innerWallCollisionWeightWhenSearchNewBoard,
-        isLowerWeight ? lowerWeightWhenSearchNewBoard : 0,
+        isLowerDifficulty ? lowerDifficultyWhenSearchNewBoard : 0,
       )) {
         debugPrint(
             "Tried ${i + 1} times and found a board that met the requirements");
@@ -222,6 +220,17 @@ class GameState with _$GameState {
     final solveBoard =
         SolveBoard(board: board, searchFinishedCount: searchCount);
     final answerHistories = solveBoard.solve();
+
+    final tuple = CountBoard(
+      board: board,
+      moveHistory: answerHistories[0],
+    ).countAndDifficulty(
+      lengthWeightWhenSearchNewBoard,
+      robotCollisionWeightWhenSearchNewBoard,
+      innerWallCollisionWeightWhenSearchNewBoard,
+    );
+    debugPrint("Difficulty: ${tuple.item2}=${tuple.item1}");
+
     return copyWith(answerHistories: answerHistories);
   }
 
@@ -259,9 +268,10 @@ class GameState with _$GameState {
           innerWallCollisionWeightWhenSearchNewBoard:
               innerWallCollisionWeightWhenSearchNewBoard);
 
-  GameState onSetLowerWeightWhenSearchNewBoard(
-          int lowerWeightWhenSearchNewBoard) =>
-      copyWith(lowerWeightWhenSearchNewBoard: lowerWeightWhenSearchNewBoard);
+  GameState onSetLowerDifficultyWhenSearchNewBoard(
+          int lowerDifficultyWhenSearchNewBoard) =>
+      copyWith(
+          lowerDifficultyWhenSearchNewBoard: lowerDifficultyWhenSearchNewBoard);
 
   GameState get initialized => copyWith(
         mode: GameMode.play,

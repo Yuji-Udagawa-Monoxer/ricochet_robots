@@ -233,10 +233,10 @@ class HeaderWidget extends StatelessWidget {
         dropdownColor: Colors.green,
       ),
       DropdownButton<int>(
-        value: state.lowerWeightWhenSearchNewBoard,
+        value: state.lowerDifficultyWhenSearchNewBoard,
         onChanged: (int? value) => bloc.add(
-            SetLowerWeightWhenSearchNewBoardEvent(
-                lowerWeightWhenSearchNewBoard: value ?? 0)),
+            SetLowerDifficultyWhenSearchNewBoardEvent(
+                lowerDifficultyWhenSearchNewBoard: value ?? 0)),
         items: List.generate(20, (index) => index * 10)
             .map<DropdownMenuItem<int>>((int value) {
           return DropdownMenuItem<int>(
@@ -382,7 +382,8 @@ class HeaderWidget extends StatelessWidget {
                       ? IconButton(
                           onPressed: () => context.read<GameBloc>().add(
                               const RestartConditionalEvent(
-                                  isBoardRandom: true, isLowerWeight: false)),
+                                  isBoardRandom: true,
+                                  isLowerDifficulty: false)),
                           icon: const Icon(
                             Icons.refresh,
                             color: Colors.purple,
@@ -396,7 +397,7 @@ class HeaderWidget extends StatelessWidget {
                               .read<GameBloc>()
                               .add(const RestartConditionalEvent(
                                 isBoardRandom: true,
-                                isLowerWeight: true,
+                                isLowerDifficulty: true,
                               )),
                           icon: const Icon(
                             Icons.refresh,

@@ -28,7 +28,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     on<RestartConditionalEvent>((event, emit) => emit(
         state.onRestartConditional(
             isBoardRandom: event.isBoardRandom,
-            isLowerWeight: event.isLowerWeight)));
+            isLowerDifficulty: event.isLowerDifficulty)));
     on<EditModeEvent>((event, emit) =>
         emit(state.onEditModeEvent(toEditMode: event.toEditMode)));
     on<EditBoardEvent>((event, emit) =>
@@ -60,9 +60,9 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     on<SetInnerWallCollisionWeightWhenSearchNewBoardEvent>((event, emit) =>
         emit(state.onSetInnerWallCollisionWeightWhenSearchNewBoard(
             event.innerWallCollisionWeightWhenSearchNewBoard)));
-    on<SetLowerWeightWhenSearchNewBoardEvent>((event, emit) => emit(
-        state.onSetLowerWeightWhenSearchNewBoard(
-            event.lowerWeightWhenSearchNewBoard)));
+    on<SetLowerDifficultyWhenSearchNewBoardEvent>((event, emit) => emit(
+        state.onSetLowerDifficultyWhenSearchNewBoard(
+            event.lowerDifficultyWhenSearchNewBoard)));
   }
 }
 
@@ -98,10 +98,10 @@ class RestartEvent extends GameEvent {
 
 class RestartConditionalEvent extends GameEvent {
   final bool isBoardRandom;
-  final bool isLowerWeight;
+  final bool isLowerDifficulty;
 
   const RestartConditionalEvent(
-      {required this.isBoardRandom, required this.isLowerWeight});
+      {required this.isBoardRandom, required this.isLowerDifficulty});
 }
 
 class EditModeEvent extends GameEvent {
@@ -173,9 +173,9 @@ class SetInnerWallCollisionWeightWhenSearchNewBoardEvent extends GameEvent {
       {required this.innerWallCollisionWeightWhenSearchNewBoard});
 }
 
-class SetLowerWeightWhenSearchNewBoardEvent extends GameEvent {
-  final int lowerWeightWhenSearchNewBoard;
+class SetLowerDifficultyWhenSearchNewBoardEvent extends GameEvent {
+  final int lowerDifficultyWhenSearchNewBoard;
 
-  const SetLowerWeightWhenSearchNewBoardEvent(
-      {required this.lowerWeightWhenSearchNewBoard});
+  const SetLowerDifficultyWhenSearchNewBoardEvent(
+      {required this.lowerDifficultyWhenSearchNewBoard});
 }
