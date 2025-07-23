@@ -280,17 +280,17 @@ class HeaderWidget extends StatelessWidget {
     ];
   }
 
-  Widget _buildSolveForm(BuildContext context, GameState state) {
+  List<Widget> _buildSolveForm(BuildContext context, GameState state) {
     final bloc = context.read<GameBloc>();
-    return Row(
-      children: _buildForNewBoard(context, bloc, state) +
-          _buildForDebugPrint(context, bloc, state) +
-          _buildForSearchNewBoard(context, bloc, state) +
-          _buildForSolveBoard(context, bloc, state) +
-          [
-            const SizedBox(width: 8.0),
-          ],
-    );
+    return currentMode != GameMode.edit
+        ? _buildForNewBoard(context, bloc, state) +
+            _buildForDebugPrint(context, bloc, state) +
+            _buildForSearchNewBoard(context, bloc, state) +
+            _buildForSolveBoard(context, bloc, state) +
+            [
+              const SizedBox(width: 8.0),
+            ]
+        : [const SizedBox.shrink()];
   }
 
   Widget _buildAnswers(BuildContext context, GameState state) {
@@ -314,43 +314,40 @@ class HeaderWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildEdit(BuildContext context, GameState state) {
+  List<Widget> _buildEdit(BuildContext context, GameState state) {
     final toEditMode = currentMode != GameMode.edit;
-    return Row(
-      children: [
-        toEditMode
-            ? const SizedBox.shrink()
-            : Row(
-                children: [
-                  EditableIcon(
-                    iconData: Icons.add_circle,
-                    color: Colors.grey,
-                    size: 20,
-                    editAction: const EditAction(addGoal: true),
-                    currentMode: currentMode,
-                  ),
-                  EditableIcon(
-                    iconData: Icons.rotate_right,
-                    color: Colors.grey,
-                    size: 20,
-                    editAction: const EditAction(rotateRightGrids: true),
-                    currentMode: currentMode,
-                  ),
-                  Text("Edit Mode", style: _textStyle),
-                ],
-              ),
-        IconButton(
-          onPressed: () => context
-              .read<GameBloc>()
-              .add(EditModeEvent(toEditMode: toEditMode)),
-          icon: Icon(
-            toEditMode ? Icons.edit : Icons.stop,
-            color: Colors.grey,
-            size: _iconSize,
+    List<Widget> widgets = (toEditMode
+        ? [const SizedBox.shrink()]
+        : [
+            EditableIcon(
+              iconData: Icons.add_circle,
+              color: Colors.grey,
+              size: 20,
+              editAction: const EditAction(addGoal: true),
+              currentMode: currentMode,
+            ),
+            EditableIcon(
+              iconData: Icons.rotate_right,
+              color: Colors.grey,
+              size: 20,
+              editAction: const EditAction(rotateRightGrids: true),
+              currentMode: currentMode,
+            ),
+            Text("Edit Mode", style: _textStyle),
+          ]);
+    return widgets +
+        [
+          IconButton(
+            onPressed: () => context
+                .read<GameBloc>()
+                .add(EditModeEvent(toEditMode: toEditMode)),
+            icon: Icon(
+              toEditMode ? Icons.edit : Icons.stop,
+              color: Colors.grey,
+              size: _iconSize,
+            ),
           ),
-        ),
-      ],
-    );
+        ];
   }
 
   @override
@@ -427,14 +424,15 @@ class HeaderWidget extends StatelessWidget {
                 ],
               ),
               state.unlockSecretButton
-                  ? Row(
+                  ? Wrap(
+                      spacing: 8.0,
+                      runSpacing: 8.0,
+                      alignment: WrapAlignment.end,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        const Expanded(child: SizedBox.shrink()),
-                        currentMode != GameMode.edit
-                            ? _buildSolveForm(context, state)
-                            : const SizedBox.shrink(),
+                        ..._buildSolveForm(context, state),
                         const SizedBox(width: 8.0),
-                        _buildEdit(context, state),
+                        ..._buildEdit(context, state),
                       ],
                     )
                   : const SizedBox.shrink(),
